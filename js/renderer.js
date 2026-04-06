@@ -100,8 +100,9 @@ function attachEventDelegation() {
     const dot = event.target.closest('.prog-dot');
     if (!dot) return;
     const stepIndex = [...dot.parentElement.children].indexOf(dot);
+    navigationDirection = stepIndex > state.currentStep ? 'forward' : 'backward';
     goToStep(stepIndex);
-    renderStep();
+    transitionToStep();
   });
 }
 
@@ -114,6 +115,8 @@ function attachScrollListener() {
 
 // ===== NAVIGATION HANDLERS =====
 
+let navigationDirection = 'forward';
+
 function handleNext() {
   const result = goNext();
   if (!result.valid) {
@@ -122,12 +125,14 @@ function handleNext() {
     if (firstErrorCard) firstErrorCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
-  renderStep();
+  navigationDirection = 'forward';
+  transitionToStep();
 }
 
 function handlePrev() {
   goPrev();
-  renderStep();
+  navigationDirection = 'backward';
+  transitionToStep();
 }
 
 function handleSubmit() {
@@ -148,6 +153,26 @@ function handleSubmit() {
   document.getElementById('progTime').textContent = '';
 
   renderDashboard();
+}
+
+// ===== SCROLL =====
+
+function smoothScrollTo(targetY, duration) {
+  const startY    = window.scrollY;
+  const distance  = targetY - startY;
+  const startTime = performance.now();
+
+  function scrollFrame(currentTime) {
+    const elapsed  = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased    = progress < 0.5
+      ? 2 * progress * progress
+      : 1 - (-2 * progress + 2) ** 2 / 2;
+    window.scrollTo(0, startY + distance * eased);
+    if (progress < 1) requestAnimationFrame(scrollFrame);
+  }
+
+  requestAnimationFrame(scrollFrame);
 }
 
 // ===== DOM HELPERS =====
@@ -208,11 +233,34 @@ function updateSectionProgress() {
 
 // ===== STEP RENDERING =====
 
-function renderStep() {
+function transitionToStep() {
+  const mainContainer = document.getElementById('main');
+  const currentStepElement = mainContainer.querySelector('.step');
+
+  if (!currentStepElement) {
+    renderStep(navigationDirection);
+    return;
+  }
+
+  mainContainer.style.minHeight = mainContainer.offsetHeight + 'px';
+
+  const exitClass = navigationDirection === 'forward' ? 'exit-to-left' : 'exit-to-right';
+  currentStepElement.classList.remove('active');
+  currentStepElement.classList.add(exitClass);
+
+  smoothScrollTo(mainContainer.offsetTop, 700);
+
+  currentStepElement.addEventListener('animationend', () => {
+    renderStep(navigationDirection);
+  }, { once: true });
+}
+
+function renderStep(direction) {
   const step          = state.config.steps[state.currentStep];
   const mainContainer = document.getElementById('main');
+  const enterClass    = direction === 'backward' ? ' enter-from-left' : '';
 
-  let html = `<div class="step active">`;
+  let html = `<div class="step active${enterClass}">`;
   html += buildStepHeader(step);
   step.questions.forEach(question => { html += buildQuestionCard(question); });
   html += buildSectionProgressBar(step);
@@ -220,7 +268,7 @@ function renderStep() {
   html += `</div>`;
 
   mainContainer.innerHTML = html;
-  window.scrollTo({ top: document.getElementById('progBar').offsetTop, behavior: 'smooth' });
+  mainContainer.style.minHeight = '';
   updateProgressBar();
 }
 
