@@ -52,7 +52,7 @@ survey/
 
 - **engine.js** – state, navigation, validation. No DOM access.
 - **renderer.js** – reads config + state, writes DOM. No business logic.
-- **dashboard.js** – chart initialization, score calculation, ROI formulas.
+- **dashboard.js** – clones `<template>` elements from `index.html`, fills text via DOM, sets `data-level` attributes for color mapping. Chart.js init, score calculation, ROI formulas. Zero HTML strings.
 - **storage.js** – adapter pattern. Only `save(data)`, `load()`, `clear()`. No direct `localStorage` calls outside this file.
 
 No global variables except the state object in `engine.js`.

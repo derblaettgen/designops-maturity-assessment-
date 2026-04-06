@@ -56,7 +56,6 @@
   text-align: center;
   box-shadow: var(--shadow);
   border-top: 3px solid var(--blue);
-  /* Subtle transition for the dynamic border-top-color */
   transition: box-shadow .2s;
 }
 .dash-kpi:hover { box-shadow: var(--shadow-md); }
@@ -79,6 +78,69 @@
   border-radius: var(--r-full);
   display: inline-block;
 }
+
+/* ===== DATA-LEVEL: maturity color mapping ===== */
+/* 5 maturity levels — applied via data-level on KPIs, bars, table cells */
+.dash-kpi[data-level="critical"]   { border-top-color: var(--danger); }
+.dash-kpi[data-level="critical"] .kv { color: var(--danger); }
+.dash-kpi[data-level="critical"] .ks { background: #FEE2E222; color: var(--danger); }
+
+.dash-kpi[data-level="low"]   { border-top-color: var(--orange); }
+.dash-kpi[data-level="low"] .kv { color: var(--orange); }
+.dash-kpi[data-level="low"] .ks { background: #FEF3C7; color: #92400E; }
+
+.dash-kpi[data-level="mid"]   { border-top-color: #CA8A04; }
+.dash-kpi[data-level="mid"] .kv { color: #CA8A04; }
+.dash-kpi[data-level="mid"] .ks { background: #FEF9C3; color: #854D0E; }
+
+.dash-kpi[data-level="good"]   { border-top-color: var(--teal); }
+.dash-kpi[data-level="good"] .kv { color: var(--teal); }
+.dash-kpi[data-level="good"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="excellent"]   { border-top-color: var(--blue); }
+.dash-kpi[data-level="excellent"] .kv { color: var(--blue); }
+.dash-kpi[data-level="excellent"] .ks { background: #DBEAFE; color: #1E40AF; }
+
+/* Semantic levels for special KPI cards */
+.dash-kpi[data-level="market"]   { border-top-color: var(--g400); }
+.dash-kpi[data-level="market"] .kv { color: var(--g500); }
+.dash-kpi[data-level="market"] .ks { background: var(--g100); color: var(--g500); }
+
+.dash-kpi[data-level="top"]   { border-top-color: var(--teal); }
+.dash-kpi[data-level="top"] .kv { color: var(--teal); }
+.dash-kpi[data-level="top"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="positive"]   { border-top-color: var(--teal); }
+.dash-kpi[data-level="positive"] .kv { color: var(--teal); }
+.dash-kpi[data-level="positive"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="negative"]   { border-top-color: var(--orange); }
+.dash-kpi[data-level="negative"] .kv { color: var(--orange); }
+.dash-kpi[data-level="negative"] .ks { background: #FEF3C7; color: #92400E; }
+
+.dash-kpi[data-level="waste"]   { border-top-color: var(--danger); }
+.dash-kpi[data-level="waste"] .kv { color: var(--danger); }
+
+.dash-kpi[data-level="saving"]   { border-top-color: var(--teal); }
+.dash-kpi[data-level="saving"] .kv { color: var(--teal); }
+.dash-kpi[data-level="saving"] .ks { background: #DCFCE7; color: #166534; }
+
+/* Dim bar fill colors by data-level */
+.dim-fill[data-level="critical"] { background: var(--danger); }
+.dim-fill[data-level="low"]      { background: var(--orange); }
+.dim-fill[data-level="mid"]      { background: #CA8A04; }
+.dim-fill[data-level="good"]     { background: var(--teal); }
+.dim-fill[data-level="excellent"]{ background: var(--blue); }
+
+/* Gap table score cell colored by level */
+.gap-score[data-level="critical"] { color: var(--danger); font-weight: 700; }
+.gap-score[data-level="low"]      { color: var(--orange); font-weight: 700; }
+.gap-score[data-level="mid"]      { color: #CA8A04; font-weight: 700; }
+.gap-score[data-level="good"]     { color: var(--teal); font-weight: 700; }
+.gap-score[data-level="excellent"]{ color: var(--blue); font-weight: 700; }
+
+/* Gap table top-performer column */
+.gap-top { color: var(--teal); font-weight: 700; }
 
 /* ===== GRID + CARDS ===== */
 .dash-grid {
@@ -104,6 +166,16 @@
   letter-spacing: -.1px;
 }
 .dash-card canvas { max-height: 300px; }
+.dash-card--spaced { margin-bottom: 28px; }
+.dash-card--cta { text-align: center; padding: 36px; }
+.dash-card--cta h3 { justify-content: center; }
+.dash-card--cta p {
+  color: var(--g500);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 16px auto 24px;
+}
 
 /* ===== DIMENSION BARS ===== */
 .dim-row {
@@ -174,6 +246,8 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+.bench-legend .dot--user   { background: var(--blue); }
+.bench-legend .dot--market { background: var(--g400); }
 .bench-legend .line {
   width: 14px;
   height: 2px;

@@ -1,9 +1,22 @@
 /**
  * dashboard.js — results rendering, Chart.js initialisation, ROI calculation.
+ * Uses <template> elements from index.html — zero HTML strings.
  * Reads state (read-only). Mutates nothing outside its own scope.
  */
 
 import { state, getScores } from './engine.js';
+
+// ===== TEMPLATE HELPER =====
+
+function cloneTemplate(id) {
+  const tpl = document.getElementById(id);
+  return tpl.content.firstElementChild.cloneNode(true);
+}
+
+function cloneTemplateAll(id) {
+  const tpl = document.getElementById(id);
+  return tpl.content.cloneNode(true);
+}
 
 // ===== EXPORTED ENTRY POINT =====
 
@@ -15,13 +28,64 @@ export function renderDashboard() {
 
   const db = document.getElementById('dashboard');
   db.classList.add('active');
-  db.innerHTML = buildDashboardHTML(scores, avg, wasteNow, saving, costs);
 
-  // Charts initialise after HTML is in the DOM
+  // Clone the main dashboard skeleton (multiple sibling nodes)
+  db.appendChild(cloneTemplateAll('tpl-dashboard'));
+
+  // Fill KPIs
+  fillKPIs(db.querySelector('#kpiContainer'), avg, wasteNow, saving);
+
+  // Fill ROI highlight
+  const roiSaving = db.querySelector('#roiSaving');
+  const roiBasis  = db.querySelector('#roiBasis');
+  roiSaving.textContent = fmtK(saving);
+  roiBasis.textContent  = `Basierend auf ${costs.nD} Designer:innen, ${costs.nDv} Developers, ${costs.nP} PMs · Stundensätze: Ø ${Math.round((costs.cD + costs.cDv + costs.cP) / 3)} €`;
+
+  // Fill ranking table
+  fillRankingTable(db.querySelector('#rankBody'));
+
+  // Fill gap analysis table
+  fillGapTable(db.querySelector('#gapBody'), scores);
+
+  // Charts init after DOM is populated
   initRadarChart(scores);
-  renderDimBars(scores);
+  fillDimBars(db.querySelector('#dimBars'), scores);
   initLevelsChart(costs);
   initROIChart(saving);
+}
+
+// ===== LEVEL MAPPING =====
+
+function levelKey(v) {
+  if (v < 2)   return 'critical';
+  if (v < 2.5) return 'low';
+  if (v < 3.5) return 'mid';
+  if (v < 4.5) return 'good';
+  return 'excellent';
+}
+
+function lvl(v) {
+  if (v < 2)   return 'Ad-hoc';
+  if (v < 2.5) return 'Emerging';
+  if (v < 3.5) return 'Strukturiert';
+  if (v < 4.5) return 'Skaliert';
+  return 'Optimiert';
+}
+
+function badgeLevelKey(v) {
+  if (v >= 4)   return 'badge-blue';
+  if (v >= 3.5) return 'badge-green';
+  if (v >= 2.5) return 'badge-yellow';
+  if (v >= 2)   return 'badge-orange';
+  return 'badge-red';
+}
+
+function priorityInfo(gap) {
+  if (gap >= 2.5) return { css: 'badge-red',    text: '🔴 Kritisch' };
+  if (gap >= 1.5) return { css: 'badge-orange', text: '🟠 Hoch' };
+  if (gap >= 0.8) return { css: 'badge-yellow', text: '🟡 Mittel' };
+  if (gap >= 0.3) return { css: 'badge-green',  text: '🟢 Niedrig' };
+  return { css: 'badge-blue', text: '✅ Gut' };
 }
 
 // ===== COST EXTRACTION =====
@@ -30,9 +94,9 @@ function extractCosts() {
   const d   = state.config.costDefaults;
   const ans = state.ans;
   return {
-    cD:  ans.cost_designer    ?? d.designer,
-    cDv: ans.cost_developer   ?? d.developer,
-    cP:  ans.cost_pm          ?? d.pm,
+    cD:  ans.cost_designer     ?? d.designer,
+    cDv: ans.cost_developer    ?? d.developer,
+    cP:  ans.cost_pm           ?? d.pm,
     nD:  ans.cost_numDesigners ?? d.numDesigners,
     nDv: ans.cost_numDevs      ?? d.numDevs,
     nP:  ans.cost_numPMs       ?? d.numPMs,
@@ -52,12 +116,10 @@ function calcWaste(scores, { cD, cDv, cP, nD, nDv, nP, hY }) {
   let wasteTarget = 0;
 
   scores.forEach((s, i) => {
-    const f  = wf[i];
-    const mN = wasteMult(s.score);
-    const mT = wasteMult(4);
+    const f    = wf[i];
     const base = (f.d * nD * cD + f.v * nDv * cDv + f.p * nP * cP) * hY;
-    wasteNow    += base * mN;
-    wasteTarget += base * mT;
+    wasteNow    += base * wasteMult(s.score);
+    wasteTarget += base * wasteMult(4);
   });
 
   return { wasteNow, wasteTarget, saving: wasteNow - wasteTarget };
@@ -75,192 +137,153 @@ function fmtK(n) {
   return Math.round(n) + ' €';
 }
 
-function col(v) {
-  if (v < 2)   return '#DC2626';
-  if (v < 2.5) return '#D97706';
-  if (v < 3.5) return '#CA8A04';
-  if (v < 4.5) return '#16A34A';
-  return '#2563EB';
+// ===== KPI CARDS =====
+
+function addKPI(container, { level, value, label, badge }) {
+  const el = cloneTemplate('tpl-kpi');
+  el.dataset.level = level;
+  el.querySelector('.kv').textContent = value;
+  el.querySelector('.kl').textContent = label;
+  const ks = el.querySelector('.ks');
+  if (badge) {
+    ks.textContent = badge;
+  } else {
+    ks.remove();
+  }
+  container.appendChild(el);
 }
 
-function lvl(v) {
-  if (v < 2)   return 'Ad-hoc';
-  if (v < 2.5) return 'Emerging';
-  if (v < 3.5) return 'Strukturiert';
-  if (v < 4.5) return 'Skaliert';
-  return 'Optimiert';
-}
-
-// ===== HTML BUILDERS =====
-
-function buildDashboardHTML(scores, avg, wasteNow, saving, { cD, cDv, cP, nD, nDv, nP }) {
+function fillKPIs(container, avg, wasteNow, saving) {
   const bench = state.config.benchmark;
-  let h = '';
+  const delta = avg - bench.marketAvg.avg;
+  const positive = delta >= 0;
 
-  // Hero
-  h += `<div class="dash-hero">
-    <h2>📊 Ihr DesignOps-Ergebnis</h2>
-    <p>Individuelle Auswertung mit Benchmark-Vergleich gegen Marktdurchschnitt und Top-Performer (DACH 2026)</p>
-  </div>`;
+  addKPI(container, {
+    level: levelKey(avg),
+    value: avg.toFixed(1),
+    label: 'Ihr Gesamt-Reifegrad',
+    badge: lvl(avg)
+  });
 
-  // KPIs
-  h += buildKPIs(avg, wasteNow, saving, bench);
+  addKPI(container, {
+    level: 'market',
+    value: bench.marketAvg.avg.toFixed(1),
+    label: 'Marktdurchschnitt DACH',
+    badge: lvl(bench.marketAvg.avg)
+  });
 
-  // Main grid: radar + dim bars
-  h += `<div class="dash-grid">
-    <div class="dash-card"><h3>🕸️ Radar: Sie vs. Markt vs. Top-Performer</h3><canvas id="chRadar"></canvas></div>
-    <div class="dash-card">
-      <h3>📊 Dimensionen im Detail</h3>
-      <div id="dimBars"></div>
-      <div class="bench-legend">
-        <span><span class="dot" style="background:var(--blue)"></span> Ihr Wert</span>
-        <span><span class="dot" style="background:var(--g400)"></span> Marktdurchschnitt</span>
-        <span><span class="line"></span> Top-Performer</span>
-      </div>
-    </div>
-  </div>`;
+  addKPI(container, {
+    level: 'top',
+    value: bench.topPerformer.avg.toFixed(1),
+    label: 'Top-Performer',
+    badge: lvl(bench.topPerformer.avg)
+  });
 
-  // Ranking table
-  h += buildRankingTable();
+  addKPI(container, {
+    level: positive ? 'positive' : 'negative',
+    value: `${positive ? '▲' : '▼'} ${Math.abs(delta).toFixed(1)}`,
+    label: 'vs. Markt',
+    badge: positive ? 'Überdurchschnittlich' : 'Unter Durchschnitt'
+  });
 
-  // Gap analysis
-  h += buildGapTable(scores, bench);
+  addKPI(container, {
+    level: 'waste',
+    value: fmtK(wasteNow),
+    label: 'Verschwendung / Jahr (aktuell)',
+    badge: null
+  });
 
-  // ROI highlight
-  h += `<div class="roi-highlight">
-    <div class="sub">💰 Jährliches Einsparpotenzial bei Reifegrad 4.0</div>
-    <div class="big">${fmtK(saving)}</div>
-    <div class="sub">Basierend auf ${nD} Designer:innen, ${nDv} Developers, ${nP} PMs · Stundensätze: Ø ${Math.round((cD + cDv + cP) / 3)} €</div>
-  </div>`;
-
-  // Charts grid
-  h += `<div class="dash-grid">
-    <div class="dash-card"><h3>💰 Einsparung pro Reifegrad-Stufe</h3><canvas id="chLevels"></canvas></div>
-    <div class="dash-card"><h3>📈 ROI über 3 Jahre (realistisches Szenario)</h3><canvas id="chROI"></canvas></div>
-  </div>`;
-
-  // CTA
-  h += `<div class="dash-card" style="text-align:center;padding:36px">
-    <h3 style="justify-content:center">🚀 Nächste Schritte</h3>
-    <p style="color:var(--g500);font-size:.88em;line-height:1.7;max-width:500px;margin:16px auto 24px">
-      Die vollständigen Studienergebnisse mit allen Branchen-Benchmarks erscheinen im <strong>Q3 2026</strong> auf adesso.de.
-      Nutzen Sie Ihre individuelle Auswertung als Basis für Ihren DesignOps Business Case.
-    </p>
-    <a href="https://www.adesso.de" target="_blank" class="btn btn-primary">Mehr erfahren auf adesso.de →</a>
-  </div>`;
-
-  return h;
+  addKPI(container, {
+    level: 'saving',
+    value: fmtK(saving),
+    label: 'Einsparpotenzial / Jahr',
+    badge: 'bei Reifegrad 4.0'
+  });
 }
 
-function buildKPIs(avg, wasteNow, saving, bench) {
-  const ma  = bench.marketAvg;
-  const tp  = bench.topPerformer;
-  const delta = avg - ma.avg;
-  const deltaPositive = delta >= 0;
+// ===== RANKING TABLE =====
 
-  return `<div class="dash-kpis">
-    <div class="dash-kpi" style="border-top-color:${col(avg)}">
-      <div class="kv" style="color:${col(avg)}">${avg.toFixed(1)}</div>
-      <div class="kl">Ihr Gesamt-Reifegrad</div>
-      <div class="ks" style="background:${col(avg)}22;color:${col(avg)}">${lvl(avg)}</div>
-    </div>
-    <div class="dash-kpi" style="border-top-color:var(--g400)">
-      <div class="kv" style="color:var(--g500)">${ma.avg.toFixed(1)}</div>
-      <div class="kl">Marktdurchschnitt DACH</div>
-      <div class="ks" style="background:var(--g100);color:var(--g500)">${lvl(ma.avg)}</div>
-    </div>
-    <div class="dash-kpi" style="border-top-color:var(--teal)">
-      <div class="kv" style="color:var(--teal)">${tp.avg.toFixed(1)}</div>
-      <div class="kl">Top-Performer</div>
-      <div class="ks" style="background:#DCFCE7;color:#166534">${lvl(tp.avg)}</div>
-    </div>
-    <div class="dash-kpi" style="border-top-color:${deltaPositive ? 'var(--teal)' : 'var(--orange)'}">
-      <div class="kv" style="color:${deltaPositive ? 'var(--teal)' : 'var(--orange)'}">${deltaPositive ? '▲' : '▼'} ${Math.abs(delta).toFixed(1)}</div>
-      <div class="kl">vs. Markt</div>
-      <div class="ks" style="background:${deltaPositive ? '#DCFCE7' : '#FEF3C7'};color:${deltaPositive ? '#166534' : '#92400E'}">${deltaPositive ? 'Überdurchschnittlich' : 'Unter Durchschnitt'}</div>
-    </div>
-    <div class="dash-kpi" style="border-top-color:var(--danger)">
-      <div class="kv" style="color:var(--danger)">${fmtK(wasteNow)}</div>
-      <div class="kl">Verschwendung / Jahr (aktuell)</div>
-    </div>
-    <div class="dash-kpi" style="border-top-color:var(--teal)">
-      <div class="kv" style="color:var(--teal)">${fmtK(saving)}</div>
-      <div class="kl">Einsparpotenzial / Jahr</div>
-      <div class="ks" style="background:#DCFCE7;color:#166534">bei Reifegrad 4.0</div>
-    </div>
-  </div>`;
-}
-
-function buildRankingTable() {
+function fillRankingTable(tbody) {
   const bench  = state.config.benchmark;
   const sorted = Object.entries(bench.byBranch).sort((a, b) => b[1] - a[1]);
-  const branch = state.ans.d_branch ?? '';
+  const branch = (state.ans.d_branch ?? '').toLowerCase();
 
-  let h = `<div class="dash-card" style="margin-bottom:28px">
-    <h3>🏆 Branchen-Ranking: Wo stehen die Top-Performer?</h3>
-    <table class="rank-table">
-      <thead><tr><th>#</th><th>Branche</th><th>Ø Reifegrad</th><th>Stufe</th></tr></thead>
-      <tbody>`;
+  sorted.forEach(([name, score], i) => {
+    const row    = cloneTemplate('tpl-rank-row');
+    const isYou  = branch && branch.includes(name.toLowerCase().split('/')[0].trim());
 
-  sorted.forEach(([b, v], i) => {
-    // Fuzzy match: check if user's selected branch contains the benchmark key prefix
-    const isYou = branch && branch.toLowerCase().includes(b.toLowerCase().split('/')[0].trim());
-    const badge = badgeClass(v);
-    h += `<tr class="${isYou ? 'you' : ''}">
-      <td>${i + 1}</td>
-      <td>${isYou ? '→ ' : ''}<strong>${b}</strong>${isYou ? ' (Ihre Branche)' : ''}</td>
-      <td><strong>${v.toFixed(1)}</strong></td>
-      <td><span class="badge ${badge}">${lvl(v)}</span></td>
-    </tr>`;
+    if (isYou) row.classList.add('you');
+
+    row.querySelector('.rank-pos').textContent   = i + 1;
+    row.querySelector('.rank-name').innerHTML     = `${isYou ? '→ ' : ''}<strong>${name}</strong>${isYou ? ' (Ihre Branche)' : ''}`;
+    row.querySelector('.rank-score').innerHTML    = `<strong>${score.toFixed(1)}</strong>`;
+
+    const badge = row.querySelector('.badge');
+    badge.dataset.level = badgeLevelKey(score).replace('badge-', '');
+    badge.classList.add(badgeLevelKey(score));
+    badge.textContent = lvl(score);
+
+    tbody.appendChild(row);
   });
-
-  h += `</tbody></table></div>`;
-  return h;
 }
 
-function buildGapTable(scores, bench) {
-  const gaps = scores.map(s => ({
-    ...s,
-    top: bench.topPerformer[s.key] ?? 4.3,
-    gap: (bench.topPerformer[s.key] ?? 4.3) - s.score
-  })).sort((a, b) => b.gap - a.gap);
+// ===== GAP ANALYSIS TABLE =====
 
-  let h = `<div class="dash-card" style="margin-bottom:28px">
-    <h3>📋 Gap-Analyse: Ihr Weg zu den Top-Performern</h3>
-    <table class="rank-table">
-      <thead><tr><th>#</th><th>Dimension</th><th>Ihr Wert</th><th>Top-Performer</th><th>Gap</th><th>Priorität</th></tr></thead>
-      <tbody>`;
+function fillGapTable(tbody, scores) {
+  const bench = state.config.benchmark;
+  const gaps  = scores
+    .map(s => ({
+      ...s,
+      top: bench.topPerformer[s.key] ?? 4.3,
+      gap: (bench.topPerformer[s.key] ?? 4.3) - s.score
+    }))
+    .sort((a, b) => b.gap - a.gap);
 
   gaps.forEach((g, i) => {
-    const [pb, pl] = priorityBadge(g.gap);
-    h += `<tr>
-      <td>${i + 1}</td>
-      <td><strong>${g.name}</strong></td>
-      <td style="color:${col(g.score)};font-weight:700">${g.score.toFixed(1)}</td>
-      <td style="color:var(--teal);font-weight:700">${g.top.toFixed(1)}</td>
-      <td>${g.gap > 0 ? '-' + g.gap.toFixed(1) : '✅'}</td>
-      <td><span class="badge ${pb}">${pl}</span></td>
-    </tr>`;
+    const row  = cloneTemplate('tpl-gap-row');
+    const prio = priorityInfo(g.gap);
+
+    row.querySelector('.gap-pos').textContent  = i + 1;
+    row.querySelector('.gap-name').innerHTML    = `<strong>${g.name}</strong>`;
+
+    const scoreCell = row.querySelector('.gap-score');
+    scoreCell.textContent  = g.score.toFixed(1);
+    scoreCell.dataset.level = levelKey(g.score);
+
+    row.querySelector('.gap-top').textContent   = g.top.toFixed(1);
+    row.querySelector('.gap-delta').textContent  = g.gap > 0 ? '-' + g.gap.toFixed(1) : '✅';
+
+    const badge = row.querySelector('.badge');
+    badge.classList.add(prio.css);
+    badge.textContent = prio.text;
+
+    tbody.appendChild(row);
   });
-
-  h += `</tbody></table></div>`;
-  return h;
 }
 
-function badgeClass(v) {
-  if (v >= 4)   return 'badge-blue';
-  if (v >= 3.5) return 'badge-green';
-  if (v >= 2.5) return 'badge-yellow';
-  if (v >= 2)   return 'badge-orange';
-  return 'badge-red';
-}
+// ===== DIMENSION BARS =====
 
-function priorityBadge(gap) {
-  if (gap >= 2.5) return ['badge-red',    '🔴 Kritisch'];
-  if (gap >= 1.5) return ['badge-orange', '🟠 Hoch'];
-  if (gap >= 0.8) return ['badge-yellow', '🟡 Mittel'];
-  if (gap >= 0.3) return ['badge-green',  '🟢 Niedrig'];
-  return ['badge-blue', '✅ Gut'];
+function fillDimBars(container, scores) {
+  const bench = state.config.benchmark;
+
+  scores.forEach(s => {
+    const row     = cloneTemplate('tpl-dim-bar');
+    const pct     = (s.score / 5) * 100;
+    const topPct  = ((bench.topPerformer[s.key] ?? 4.3) / 5) * 100;
+    const avgPct  = (bench.marketAvg[s.key] / 5) * 100;
+
+    row.querySelector('.dim-lbl').textContent = s.name;
+    row.querySelector('.dim-val').textContent = s.score.toFixed(1);
+
+    const fill = row.querySelector('.dim-fill');
+    fill.style.width = pct + '%';
+    fill.dataset.level = levelKey(s.score);
+
+    row.querySelector('.dim-bench').style.left     = topPct + '%';
+    row.querySelector('.dim-bench-avg').style.left  = avgPct + '%';
+
+    container.appendChild(row);
+  });
 }
 
 // ===== CHART INIT =====
@@ -272,16 +295,16 @@ function initRadarChart(scores) {
   new Chart(ctx, {
     type: 'radar',
     data: {
-      labels:   scores.map(s => s.name),
+      labels: scores.map(s => s.name),
       datasets: [
         {
-          label:            'Ihr Ergebnis',
-          data:             scores.map(s => s.score),
-          backgroundColor:  'rgba(0,76,147,.15)',
-          borderColor:      '#004C93',
-          borderWidth:      2,
+          label:                'Ihr Ergebnis',
+          data:                 scores.map(s => s.score),
+          backgroundColor:      'rgba(0,76,147,.15)',
+          borderColor:          '#004C93',
+          borderWidth:          2,
           pointBackgroundColor: '#004C93',
-          pointRadius:      5
+          pointRadius:          5
         },
         {
           label:           'Marktdurchschnitt',
@@ -293,14 +316,14 @@ function initRadarChart(scores) {
           pointRadius:     0
         },
         {
-          label:            'Top-Performer',
-          data:             scores.map(s => bench.topPerformer[s.key]),
-          backgroundColor:  'rgba(0,180,160,.08)',
-          borderColor:      '#00B4A0',
-          borderWidth:      2,
-          borderDash:       [6, 3],
+          label:                'Top-Performer',
+          data:                 scores.map(s => bench.topPerformer[s.key]),
+          backgroundColor:      'rgba(0,180,160,.08)',
+          borderColor:          '#00B4A0',
+          borderWidth:          2,
+          borderDash:           [6, 3],
           pointBackgroundColor: '#00B4A0',
-          pointRadius:      3
+          pointRadius:          3
         }
       ]
     },
@@ -322,32 +345,11 @@ function initRadarChart(scores) {
   });
 }
 
-function renderDimBars(scores) {
-  const bench  = state.config.benchmark;
-  const barsEl = document.getElementById('dimBars');
-
-  barsEl.innerHTML = scores.map(s => {
-    const pct      = (s.score / 5) * 100;
-    const benchPct = (bench.marketAvg[s.key] / 5) * 100;
-    const topPct   = ((bench.topPerformer[s.key] ?? 4.3) / 5) * 100;
-    return `<div class="dim-row">
-      <span class="dim-lbl">${s.name}</span>
-      <div class="dim-track">
-        <div class="dim-fill" style="width:${pct}%;background:${col(s.score)}"></div>
-        <div class="dim-bench" style="left:${topPct}%" title="Top-Performer"></div>
-        <div class="dim-bench-avg" style="left:${benchPct}%" title="Marktdurchschnitt"></div>
-      </div>
-      <span class="dim-val">${s.score.toFixed(1)}</span>
-    </div>`;
-  }).join('');
-}
-
 function initLevelsChart({ cD, cDv, cP, nD, nDv, nP, hY }) {
   const ctx  = document.getElementById('chLevels').getContext('2d');
   const wf   = state.config.wasteFractions;
-  const lvls = [1, 2, 3, 4, 5];
 
-  const wasteLvl = lvls.map(l => {
+  const wasteLvl = [1, 2, 3, 4, 5].map(l => {
     let t = 0;
     wf.forEach(f => {
       t += (f.d * nD * cD + f.v * nDv * cDv + f.p * nP * cP) * hY * wasteMult(l);
@@ -402,7 +404,7 @@ function initROIChart(saving) {
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels:   ['Start', 'Jahr 1', 'Jahr 2', 'Jahr 3'],
+      labels: ['Start', 'Jahr 1', 'Jahr 2', 'Jahr 3'],
       datasets: [
         {
           label:           'Kum. Investment',
@@ -419,13 +421,13 @@ function initROIChart(saving) {
           fill: true, tension: .3, borderWidth: 2
         },
         {
-          label:               'Netto-ROI',
-          data:                cumN,
-          borderColor:         '#004C93',
-          borderWidth:         3,
-          tension:             .3,
+          label:                'Netto-ROI',
+          data:                 cumN,
+          borderColor:          '#004C93',
+          borderWidth:          3,
+          tension:              .3,
           pointBackgroundColor: cumN.map(v => v >= 0 ? '#16A34A' : '#DC2626'),
-          pointRadius:         5
+          pointRadius:          5
         }
       ]
     },
