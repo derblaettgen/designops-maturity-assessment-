@@ -1,28 +1,24 @@
-/**
- * renderer.js — entry point (ES module).
- * Reads config + state, writes DOM. No business logic.
- * Event delegation replaces all inline handlers.
- */
-
-import { state, init, goNext, goPrev, goTo, setAnswer, setMulti, validate, countAnswered } from './engine.js';
-import { save, load } from './storage.js';
+import {
+  state, init, goNext, goPrev, goToStep,
+  setAnswer, setMultiAnswer, validate, countAnswered, persistState
+} from './engine.js';
+import { load } from './storage.js';
 import { renderDashboard } from './dashboard.js';
 
 // ===== BOOTSTRAP =====
 
 async function bootstrap() {
-  const config = await fetch('./survey.config.json').then(r => {
-    if (!r.ok) throw new Error(`Config fetch failed: ${r.status}`);
-    return r.json();
+  const config = await fetch('./survey.config.json').then(response => {
+    if (!response.ok) throw new Error(`Config fetch failed: ${response.status}`);
+    return response.json();
   });
 
   init(config);
 
-  const saved = load();
-  if (saved) {
-    // Restore previously saved progress
-    Object.assign(state.ans, saved.ans);
-    state.cur = saved.cur ?? 0;
+  const savedState = load();
+  if (savedState) {
+    Object.assign(state.answers, savedState.answers);
+    state.currentStep = savedState.currentStep ?? 0;
   }
 
   attachEventDelegation();
@@ -30,93 +26,89 @@ async function bootstrap() {
   renderStep();
 }
 
-bootstrap().catch(err => {
+bootstrap().catch(error => {
   document.getElementById('main').innerHTML =
     `<p style="padding:48px 24px;color:#DC2626;font-weight:600">
       Fehler beim Laden der Konfiguration.<br>
-      <small style="font-weight:400;color:#6B7280">${err.message}</small>
+      <small style="font-weight:400;color:#6B7280">${error.message}</small>
     </p>`;
-  console.error('[survey] bootstrap error:', err);
+  console.error('[survey] bootstrap error:', error);
 });
 
 // ===== EVENT DELEGATION =====
 
 function attachEventDelegation() {
-  const main     = document.getElementById('main');
-  const progDots = document.getElementById('progDots');
+  const mainContainer     = document.getElementById('main');
+  const progressDotsPanel = document.getElementById('progDots');
 
-  // ---- change events: radio, select, checkbox, cost number inputs ----
-  main.addEventListener('change', e => {
-    const t = e.target;
+  mainContainer.addEventListener('change', event => {
+    const target = event.target;
 
-    if (t.matches('.likert input[type="radio"]')) {
-      setAnswer(t.name, Number(t.value));
-      markAnswered(t.name);
+    if (target.matches('.likert input[type="radio"]')) {
+      setAnswer(target.name, Number(target.value));
+      markQuestionAnswered(target.name);
       updateSectionProgress();
-      save({ cur: state.cur, ans: state.ans });
+      persistState();
       return;
     }
 
-    if (t.matches('.sel-wrap select')) {
-      const id = t.dataset.qid;
-      setAnswer(id, t.value);
-      t.classList.toggle('filled', !!t.value);
-      markAnswered(id);
-      save({ cur: state.cur, ans: state.ans });
+    if (target.matches('.sel-wrap select')) {
+      const questionId = target.dataset.qid;
+      setAnswer(questionId, target.value);
+      target.classList.toggle('filled', !!target.value);
+      markQuestionAnswered(questionId);
+      persistState();
       return;
     }
 
-    if (t.matches('.chips input[type="checkbox"]')) {
-      const id = t.name;
-      const checked = [...main.querySelectorAll(`.chips input[name="${id}"]:checked`)]
-        .map(cb => cb.value);
-      setMulti(id, checked.length ? checked : undefined);
-      markAnswered(id);
-      save({ cur: state.cur, ans: state.ans });
+    if (target.matches('.chips input[type="checkbox"]')) {
+      const questionId = target.name;
+      const selectedValues = [...mainContainer.querySelectorAll(`.chips input[name="${questionId}"]:checked`)]
+        .map(checkbox => checkbox.value);
+      setMultiAnswer(questionId, selectedValues.length ? selectedValues : undefined);
+      markQuestionAnswered(questionId);
+      persistState();
       return;
     }
 
-    if (t.matches('.cost-input')) {
-      setAnswer('cost_' + t.dataset.costkey, Number(t.value));
-      save({ cur: state.cur, ans: state.ans });
+    if (target.matches('.cost-input')) {
+      setAnswer('cost_' + target.dataset.costkey, Number(target.value));
+      persistState();
     }
   });
 
-  // ---- input events: textarea ----
-  main.addEventListener('input', e => {
-    const t = e.target;
-    if (t.matches('.tarea')) {
-      const id = t.dataset.qid;
-      setAnswer(id, t.value);
-      markAnswered(id);
-      save({ cur: state.cur, ans: state.ans });
+  mainContainer.addEventListener('input', event => {
+    const target = event.target;
+    if (target.matches('.tarea')) {
+      const questionId = target.dataset.qid;
+      setAnswer(questionId, target.value);
+      markQuestionAnswered(questionId);
+      persistState();
     }
   });
 
-  // ---- click events: nav buttons ----
-  main.addEventListener('click', e => {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
+  mainContainer.addEventListener('click', event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const action = button.dataset.action;
     if (action === 'next')   handleNext();
     if (action === 'prev')   handlePrev();
     if (action === 'submit') handleSubmit();
   });
 
-  // ---- dot navigation ----
-  progDots.addEventListener('click', e => {
-    const dot = e.target.closest('.prog-dot');
+  progressDotsPanel.addEventListener('click', event => {
+    const dot = event.target.closest('.prog-dot');
     if (!dot) return;
-    const i = [...dot.parentElement.children].indexOf(dot);
-    goTo(i);
+    const stepIndex = [...dot.parentElement.children].indexOf(dot);
+    goToStep(stepIndex);
     renderStep();
   });
 }
 
 function attachScrollListener() {
-  const bar = document.getElementById('progBar');
+  const progressBar = document.getElementById('progBar');
   window.addEventListener('scroll', () => {
-    bar.classList.toggle('scrolled', window.scrollY > 10);
+    progressBar.classList.toggle('scrolled', window.scrollY > 10);
   }, { passive: true });
 }
 
@@ -125,10 +117,9 @@ function attachScrollListener() {
 function handleNext() {
   const result = goNext();
   if (!result.valid) {
-    applyErrors(result.failedIds);
-    // Scroll to first error card
-    const firstError = document.getElementById('qc-' + result.failedIds[0]);
-    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    applyValidationErrors(result.failedIds);
+    const firstErrorCard = document.getElementById('qc-' + result.failedIds[0]);
+    if (firstErrorCard) firstErrorCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   renderStep();
@@ -142,17 +133,15 @@ function handlePrev() {
 function handleSubmit() {
   const result = validate();
   if (!result.valid) {
-    applyErrors(result.failedIds);
-    const firstError = document.getElementById('qc-' + result.failedIds[0]);
-    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    applyValidationErrors(result.failedIds);
+    const firstErrorCard = document.getElementById('qc-' + result.failedIds[0]);
+    if (firstErrorCard) firstErrorCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
-  // Hide survey sections
   document.getElementById('main').style.display = 'none';
   document.getElementById('heroSection').style.display = 'none';
 
-  // Update progress bar to show completion
   document.getElementById('progFill').style.width = '100%';
   document.getElementById('progLabel').textContent = '📊 Auswertung';
   document.getElementById('progAnswered').textContent = 'Abgeschlossen';
@@ -163,235 +152,233 @@ function handleSubmit() {
 
 // ===== DOM HELPERS =====
 
-function markAnswered(id) {
-  const card = document.getElementById('qc-' + id);
+function markQuestionAnswered(questionId) {
+  const card = document.getElementById('qc-' + questionId);
   if (card) {
     card.classList.add('answered');
     card.classList.remove('error');
   }
-  updateProg();
+  updateProgressBar();
 }
 
-function applyErrors(failedIds) {
-  // Clear all current errors first
-  document.querySelectorAll('.qcard.error').forEach(c => c.classList.remove('error'));
-  failedIds.forEach(id => {
-    const card = document.getElementById('qc-' + id);
+function applyValidationErrors(failedIds) {
+  document.querySelectorAll('.qcard.error').forEach(card => card.classList.remove('error'));
+  failedIds.forEach(questionId => {
+    const card = document.getElementById('qc-' + questionId);
     if (card) card.classList.add('error');
   });
 }
 
 // ===== PROGRESS =====
 
-function updateProg() {
-  const total = state.config.steps.length;
-  const pct   = Math.min(Math.round((state.cur / total) * 100) + 10, 100);
+function updateProgressBar() {
+  const totalSteps = state.config.steps.length;
+  const progressPercent = Math.min(Math.round((state.currentStep / totalSteps) * 100) + 10, 100);
 
-  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progFill').style.width = progressPercent + '%';
   document.getElementById('progLabel').textContent =
-    `Abschnitt ${state.cur + 1} von ${total} — ${state.config.sectionNames[state.cur]}`;
+    `Abschnitt ${state.currentStep + 1} von ${totalSteps} — ${state.config.sectionNames[state.currentStep]}`;
   document.getElementById('progAnswered').textContent = `${countAnswered()} beantwortet`;
   document.getElementById('progTime').textContent =
-    `~${Math.max(1, Math.round((total - state.cur) * 1.3))} Min.`;
+    `~${Math.max(1, Math.round((totalSteps - state.currentStep) * 1.3))} Min.`;
 
-  renderDots();
+  renderProgressDots();
 }
 
-function renderDots() {
-  const total = state.config.steps.length;
-  document.getElementById('progDots').innerHTML = Array.from({ length: total }, (_, i) =>
-    `<div class="prog-dot ${i < state.cur ? 'done' : i === state.cur ? 'active' : ''}"></div>`
+function renderProgressDots() {
+  const totalSteps = state.config.steps.length;
+  document.getElementById('progDots').innerHTML = Array.from({ length: totalSteps }, (_, index) =>
+    `<div class="prog-dot ${index < state.currentStep ? 'done' : index === state.currentStep ? 'active' : ''}"></div>`
   ).join('');
 }
 
 function updateSectionProgress() {
-  const step   = state.config.steps[state.cur];
-  const lqs    = step.questions.filter(q => q.type === 'likert');
-  if (!lqs.length) return;
+  const step            = state.config.steps[state.currentStep];
+  const likertQuestions = step.questions.filter(question => question.type === 'likert');
+  if (!likertQuestions.length) return;
 
-  const answered = lqs.filter(q => state.ans[q.id]).length;
-  const pct      = Math.round(answered / lqs.length * 100);
+  const answeredCount  = likertQuestions.filter(question => state.answers[question.id]).length;
+  const percentComplete = Math.round(answeredCount / likertQuestions.length * 100);
 
-  const fill = document.querySelector('.cb-fill');
-  const pctEl = document.querySelector('.cb-pct');
-  if (fill)  fill.style.width = pct + '%';
-  if (pctEl) pctEl.textContent = pct + '%';
+  const fillBar    = document.querySelector('.cb-fill');
+  const percentLabel = document.querySelector('.cb-pct');
+  if (fillBar)     fillBar.style.width = percentComplete + '%';
+  if (percentLabel) percentLabel.textContent = percentComplete + '%';
 }
 
 // ===== STEP RENDERING =====
 
 function renderStep() {
-  const step = state.config.steps[state.cur];
-  const main = document.getElementById('main');
+  const step          = state.config.steps[state.currentStep];
+  const mainContainer = document.getElementById('main');
 
-  let h = `<div class="step active">`;
-  h += renderStepHead(step);
-  step.questions.forEach(q => { h += renderQuestion(q); });
-  h += renderSectionProgress(step);
-  h += renderNav();
-  h += `</div>`;
+  let html = `<div class="step active">`;
+  html += buildStepHeader(step);
+  step.questions.forEach(question => { html += buildQuestionCard(question); });
+  html += buildSectionProgressBar(step);
+  html += buildNavigationButtons();
+  html += `</div>`;
 
-  main.innerHTML = h;
+  mainContainer.innerHTML = html;
   window.scrollTo({ top: document.getElementById('progBar').offsetTop, behavior: 'smooth' });
-  updateProg();
+  updateProgressBar();
 }
 
-function renderStepHead(step) {
-  const total = state.config.steps.length;
-  let h = `<div class="step-head">`;
-  h += `<div class="step-number">Abschnitt ${state.cur + 1} von ${total} — ${state.config.sectionNames[state.cur]}</div>`;
-  h += `<h2>${step.icon} ${step.title}</h2>`;
-  h += `<p>${step.desc}</p>`;
-  if (step.note) h += `<div class="study-note">🔬 ${step.note}</div>`;
-  h += `</div>`;
-  return h;
+function buildStepHeader(step) {
+  const totalSteps = state.config.steps.length;
+  let html = `<div class="step-head">`;
+  html += `<div class="step-number">Abschnitt ${state.currentStep + 1} von ${totalSteps} — ${state.config.sectionNames[state.currentStep]}</div>`;
+  html += `<h2>${step.icon} ${step.title}</h2>`;
+  html += `<p>${step.desc}</p>`;
+  if (step.note) html += `<div class="study-note">🔬 ${step.note}</div>`;
+  html += `</div>`;
+  return html;
 }
 
-function renderQuestion(q) {
-  const a        = state.ans[q.id];
-  const answered = a !== undefined && a !== '' && !(Array.isArray(a) && a.length === 0);
+function buildQuestionCard(question) {
+  const answer     = state.answers[question.id];
+  const isAnswered = answer !== undefined && answer !== '' && !(Array.isArray(answer) && answer.length === 0);
 
-  let h = `<div class="qcard ${answered ? 'answered' : ''}" id="qc-${q.id}">`;
-  h += `<div class="check-mark">✓</div>`;
-  h += `<div class="q-id">${q.id.toUpperCase()}${q.req ? ' <span class="q-req">*</span>' : ''}</div>`;
-  h += `<div class="q-text">${q.text}</div>`;
-  if (q.hint) h += `<div class="q-hint">${q.hint}</div>`;
+  let html = `<div class="qcard ${isAnswered ? 'answered' : ''}" id="qc-${question.id}">`;
+  html += `<div class="check-mark">✓</div>`;
+  html += `<div class="q-id">${question.id.toUpperCase()}${question.req ? ' <span class="q-req">*</span>' : ''}</div>`;
+  html += `<div class="q-text">${question.text}</div>`;
+  if (question.hint) html += `<div class="q-hint">${question.hint}</div>`;
 
-  switch (q.type) {
-    case 'likert':   h += buildLikert(q, a);   break;
-    case 'select':   h += buildSelect(q, a);   break;
-    case 'multi':    h += buildMulti(q, a);    break;
-    case 'textarea': h += buildTextarea(q, a); break;
-    case 'cost':     h += buildCost();         break;
+  switch (question.type) {
+    case 'likert':   html += buildLikertScale(question, answer);   break;
+    case 'select':   html += buildSelectDropdown(question, answer); break;
+    case 'multi':    html += buildMultiSelect(question, answer);   break;
+    case 'textarea': html += buildTextarea(question, answer);      break;
+    case 'cost':     html += buildCostInputs();                    break;
   }
 
-  h += `</div>`;
-  return h;
+  html += `</div>`;
+  return html;
 }
 
-function buildLikert(q, a) {
+function buildLikertScale(question, currentAnswer) {
   const labels = state.config.labels;
-  let h = `<div class="likert">`;
-  for (let i = 1; i <= 5; i++) {
-    h += `<div class="opt">`;
-    h += `<input type="radio" name="${q.id}" id="${q.id}_${i}" value="${i}" ${a == i ? 'checked' : ''}>`;
-    h += `<label for="${q.id}_${i}">`;
-    h += `<span class="num">${i}</span>`;
-    h += `<span class="lbl">${labels[i - 1]}</span>`;
-    h += `</label></div>`;
+  let html = `<div class="likert">`;
+  for (let scale = 1; scale <= 5; scale++) {
+    html += `<div class="opt">`;
+    html += `<input type="radio" name="${question.id}" id="${question.id}_${scale}" value="${scale}" ${currentAnswer == scale ? 'checked' : ''}>`;
+    html += `<label for="${question.id}_${scale}">`;
+    html += `<span class="num">${scale}</span>`;
+    html += `<span class="lbl">${labels[scale - 1]}</span>`;
+    html += `</label></div>`;
   }
-  h += `</div>`;
-  return h;
+  html += `</div>`;
+  return html;
 }
 
-function buildSelect(q, a) {
-  const val = a ?? q.prefill ?? '';
-  const filled = val ? 'filled' : '';
-  let h = `<div class="sel-wrap">`;
-  h += `<select id="inp-${q.id}" data-qid="${q.id}" class="${filled}">`;
-  h += `<option value="">Bitte wählen…</option>`;
-  q.options.forEach(o => {
-    h += `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`;
+function buildSelectDropdown(question, currentAnswer) {
+  const selectedValue = currentAnswer ?? question.prefill ?? '';
+  const filledClass   = selectedValue ? 'filled' : '';
+  let html = `<div class="sel-wrap">`;
+  html += `<select id="inp-${question.id}" data-qid="${question.id}" class="${filledClass}">`;
+  html += `<option value="">Bitte wählen…</option>`;
+  question.options.forEach(option => {
+    html += `<option value="${option}" ${selectedValue === option ? 'selected' : ''}>${option}</option>`;
   });
-  h += `</select></div>`;
+  html += `</select></div>`;
 
-  // Sync prefill into state so it's available on submit without interaction
-  if (q.prefill && a === undefined) setAnswer(q.id, q.prefill);
+  if (question.prefill && currentAnswer === undefined) setAnswer(question.id, question.prefill);
 
-  return h;
+  return html;
 }
 
-function buildMulti(q, a) {
-  let h = `<div class="chips">`;
-  q.options.forEach((o, i) => {
-    const checked = Array.isArray(a) && a.includes(o);
-    h += `<div class="chip">`;
-    h += `<input type="checkbox" id="${q.id}_${i}" name="${q.id}" value="${o}" ${checked ? 'checked' : ''}>`;
-    h += `<label for="${q.id}_${i}"><span class="chip-dot"></span>${o}</label>`;
-    h += `</div>`;
+function buildMultiSelect(question, currentAnswer) {
+  let html = `<div class="chips">`;
+  question.options.forEach((option, index) => {
+    const isChecked = Array.isArray(currentAnswer) && currentAnswer.includes(option);
+    html += `<div class="chip">`;
+    html += `<input type="checkbox" id="${question.id}_${index}" name="${question.id}" value="${option}" ${isChecked ? 'checked' : ''}>`;
+    html += `<label for="${question.id}_${index}"><span class="chip-dot"></span>${option}</label>`;
+    html += `</div>`;
   });
-  h += `</div>`;
-  return h;
+  html += `</div>`;
+  return html;
 }
 
-function buildTextarea(q, a) {
-  const val = a ?? '';
-  return `<textarea class="tarea" id="inp-${q.id}" data-qid="${q.id}" placeholder="Ihr Kommentar (optional)…">${val}</textarea>`;
+function buildTextarea(question, currentAnswer) {
+  const value = currentAnswer ?? '';
+  return `<textarea class="tarea" id="inp-${question.id}" data-qid="${question.id}" placeholder="Ihr Kommentar (optional)…">${value}</textarea>`;
 }
 
-function buildCost() {
-  const d = state.config.costDefaults;
-  const ans = state.ans;
+function buildCostInputs() {
+  const defaults = state.config.costDefaults;
+  const answers  = state.answers;
 
-  let h = `<div class="cost-prefilled-badge">✓ Mit Marktdurchschnitten DACH 2026 vorausgefüllt</div>`;
+  let html = `<div class="cost-prefilled-badge">✓ Mit Marktdurchschnitten DACH 2026 vorausgefüllt</div>`;
 
-  const rates = [
-    { k: 'designer',   lbl: '🎨 Designer:in' },
-    { k: 'developer',  lbl: '💻 Developer' },
-    { k: 'pm',         lbl: '📋 Project Manager' },
-    { k: 'researcher', lbl: '🔬 UX Researcher' }
+  const hourlyRates = [
+    { key: 'designer',   label: '🎨 Designer:in' },
+    { key: 'developer',  label: '💻 Developer' },
+    { key: 'pm',         label: '📋 Project Manager' },
+    { key: 'researcher', label: '🔬 UX Researcher' }
   ];
-  rates.forEach(r => {
-    const v = ans['cost_' + r.k] ?? d[r.k];
-    h += `<div class="cost-row">
-      <span class="cost-role">${r.lbl}</span>
-      <input class="cost-input" type="number" value="${v}" min="0" id="ci_${r.k}" data-costkey="${r.k}">
+  hourlyRates.forEach(rate => {
+    const value = answers['cost_' + rate.key] ?? defaults[rate.key];
+    html += `<div class="cost-row">
+      <span class="cost-role">${rate.label}</span>
+      <input class="cost-input" type="number" value="${value}" min="0" id="ci_${rate.key}" data-costkey="${rate.key}">
       <span class="cost-unit">€ / Stunde</span>
     </div>`;
   });
 
-  h += `<div class="cost-divider">`;
-  const counts = [
-    { k: 'numDesigners', lbl: '👥 Anz. Designer:innen' },
-    { k: 'numDevs',      lbl: '💻 Anz. Developers (mit Design)' },
-    { k: 'numPMs',       lbl: '📋 Anz. Project Manager' },
-    { k: 'hoursYear',    lbl: '📅 Arbeitsstunden / Jahr' }
+  html += `<div class="cost-divider">`;
+  const teamCounts = [
+    { key: 'numDesigners', label: '👥 Anz. Designer:innen' },
+    { key: 'numDevs',      label: '💻 Anz. Developers (mit Design)' },
+    { key: 'numPMs',       label: '📋 Anz. Project Manager' },
+    { key: 'hoursYear',    label: '📅 Arbeitsstunden / Jahr' }
   ];
-  counts.forEach(r => {
-    const v = ans['cost_' + r.k] ?? d[r.k];
-    h += `<div class="cost-row">
-      <span class="cost-role">${r.lbl}</span>
-      <input class="cost-input" type="number" value="${v}" min="0" id="ci_${r.k}" data-costkey="${r.k}">
+  teamCounts.forEach(item => {
+    const value = answers['cost_' + item.key] ?? defaults[item.key];
+    html += `<div class="cost-row">
+      <span class="cost-role">${item.label}</span>
+      <input class="cost-input" type="number" value="${value}" min="0" id="ci_${item.key}" data-costkey="${item.key}">
       <span class="cost-unit"></span>
     </div>`;
   });
-  h += `</div>`;
+  html += `</div>`;
 
-  h += `<div class="cost-note">💡 Tipp: Alle Werte basieren auf Marktdaten für die DACH-Region 2026. Wenn Sie die genauen Zahlen nicht kennen, können Sie die Vorgaben einfach übernehmen.</div>`;
+  html += `<div class="cost-note">💡 Tipp: Alle Werte basieren auf Marktdaten für die DACH-Region 2026. Wenn Sie die genauen Zahlen nicht kennen, können Sie die Vorgaben einfach übernehmen.</div>`;
 
-  return h;
+  return html;
 }
 
-function renderSectionProgress(step) {
-  const lqs = step.questions.filter(q => q.type === 'likert');
-  if (!lqs.length) return '';
+function buildSectionProgressBar(step) {
+  const likertQuestions = step.questions.filter(question => question.type === 'likert');
+  if (!likertQuestions.length) return '';
 
-  const answered = lqs.filter(q => state.ans[q.id]).length;
-  const pct      = Math.round(answered / lqs.length * 100);
+  const answeredCount   = likertQuestions.filter(question => state.answers[question.id]).length;
+  const percentComplete = Math.round(answeredCount / likertQuestions.length * 100);
 
   return `<div class="cb">
     <span class="cb-label">Fortschritt</span>
-    <div class="cb-track"><div class="cb-fill" style="width:${pct}%"></div></div>
-    <span class="cb-pct">${pct}%</span>
+    <div class="cb-track"><div class="cb-fill" style="width:${percentComplete}%"></div></div>
+    <span class="cb-pct">${percentComplete}%</span>
   </div>`;
 }
 
-function renderNav() {
-  const total   = state.config.steps.length;
-  const isFirst = state.cur === 0;
-  const isLast  = state.cur === total - 1;
+function buildNavigationButtons() {
+  const totalSteps = state.config.steps.length;
+  const isFirstStep = state.currentStep === 0;
+  const isLastStep  = state.currentStep === totalSteps - 1;
 
-  const back = isFirst
+  const backButton = isFirstStep
     ? '<div></div>'
     : `<button class="btn btn-ghost" data-action="prev">← Zurück</button>`;
 
-  const fwd = isLast
+  const forwardButton = isLastStep
     ? `<button class="btn btn-cta" data-action="submit">📊 Ergebnis anzeigen</button>`
     : `<button class="btn btn-primary" data-action="next">Weiter →</button>`;
 
   return `<div class="nav">
-    ${back}
-    <span class="nav-center">${state.cur + 1} / ${total}</span>
-    ${fwd}
+    ${backButton}
+    <span class="nav-center">${state.currentStep + 1} / ${totalSteps}</span>
+    ${forwardButton}
   </div>`;
 }

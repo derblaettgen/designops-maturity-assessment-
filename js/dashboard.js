@@ -1,201 +1,190 @@
-/**
- * dashboard.js — results rendering, Chart.js initialisation, ROI calculation.
- * Uses <template> elements from index.html — zero HTML strings.
- * Reads state (read-only). Mutates nothing outside its own scope.
- */
+import { state, getAllDimensionScores } from './engine.js';
 
-import { state, getScores } from './engine.js';
+// ===== TEMPLATE HELPERS =====
 
-// ===== TEMPLATE HELPER =====
-
-function cloneTemplate(id) {
-  const tpl = document.getElementById(id);
-  return tpl.content.firstElementChild.cloneNode(true);
+function cloneTemplate(templateId) {
+  const template = document.getElementById(templateId);
+  return template.content.firstElementChild.cloneNode(true);
 }
 
-function cloneTemplateAll(id) {
-  const tpl = document.getElementById(id);
-  return tpl.content.cloneNode(true);
+function cloneFullTemplate(templateId) {
+  const template = document.getElementById(templateId);
+  return template.content.cloneNode(true);
 }
 
 // ===== EXPORTED ENTRY POINT =====
 
 export function renderDashboard() {
-  const scores  = getScores();
-  const avg     = scores.reduce((a, d) => a + d.score, 0) / scores.length;
-  const costs   = extractCosts();
-  const { wasteNow, saving } = calcWaste(scores, costs);
+  const dimensionScores = getAllDimensionScores();
+  const averageScore    = dimensionScores.reduce((sum, dimension) => sum + dimension.score, 0) / dimensionScores.length;
+  const costs           = extractCosts();
+  const { currentWaste, annualSaving } = calculateWaste(dimensionScores, costs);
 
-  const db = document.getElementById('dashboard');
-  db.classList.add('active');
+  const dashboardContainer = document.getElementById('dashboard');
+  dashboardContainer.classList.add('active');
+  dashboardContainer.appendChild(cloneFullTemplate('tpl-dashboard'));
 
-  // Clone the main dashboard skeleton (multiple sibling nodes)
-  db.appendChild(cloneTemplateAll('tpl-dashboard'));
+  fillKPICards(dashboardContainer.querySelector('#kpiContainer'), averageScore, currentWaste, annualSaving);
 
-  // Fill KPIs
-  fillKPIs(db.querySelector('#kpiContainer'), avg, wasteNow, saving);
+  const savingDisplay = dashboardContainer.querySelector('#roiSaving');
+  const basisDisplay  = dashboardContainer.querySelector('#roiBasis');
+  savingDisplay.textContent = formatCompact(annualSaving);
+  basisDisplay.textContent  = `Basierend auf ${costs.designerCount} Designer:innen, ${costs.developerCount} Developers, ${costs.pmCount} PMs · Stundensätze: Ø ${Math.round((costs.designerRate + costs.developerRate + costs.pmRate) / 3)} €`;
 
-  // Fill ROI highlight
-  const roiSaving = db.querySelector('#roiSaving');
-  const roiBasis  = db.querySelector('#roiBasis');
-  roiSaving.textContent = fmtK(saving);
-  roiBasis.textContent  = `Basierend auf ${costs.nD} Designer:innen, ${costs.nDv} Developers, ${costs.nP} PMs · Stundensätze: Ø ${Math.round((costs.cD + costs.cDv + costs.cP) / 3)} €`;
+  fillRankingTable(dashboardContainer.querySelector('#rankBody'));
+  fillGapAnalysisTable(dashboardContainer.querySelector('#gapBody'), dimensionScores);
 
-  // Fill ranking table
-  fillRankingTable(db.querySelector('#rankBody'));
-
-  // Fill gap analysis table
-  fillGapTable(db.querySelector('#gapBody'), scores);
-
-  // Charts init after DOM is populated
-  initRadarChart(scores);
-  fillDimBars(db.querySelector('#dimBars'), scores);
-  initLevelsChart(costs);
-  initROIChart(saving);
+  initRadarChart(dimensionScores);
+  fillDimensionBars(dashboardContainer.querySelector('#dimBars'), dimensionScores);
+  initWasteLevelsChart(costs);
+  initROIChart(annualSaving);
 }
 
-// ===== LEVEL MAPPING =====
+// ===== MATURITY LEVEL MAPPING =====
 
-function levelKey(v) {
-  if (v < 2)   return 'critical';
-  if (v < 2.5) return 'low';
-  if (v < 3.5) return 'mid';
-  if (v < 4.5) return 'good';
+function maturityLevelKey(score) {
+  if (score < 2)   return 'critical';
+  if (score < 2.5) return 'low';
+  if (score < 3.5) return 'mid';
+  if (score < 4.5) return 'good';
   return 'excellent';
 }
 
-function lvl(v) {
-  if (v < 2)   return 'Ad-hoc';
-  if (v < 2.5) return 'Emerging';
-  if (v < 3.5) return 'Strukturiert';
-  if (v < 4.5) return 'Skaliert';
+function maturityLabel(score) {
+  if (score < 2)   return 'Ad-hoc';
+  if (score < 2.5) return 'Emerging';
+  if (score < 3.5) return 'Strukturiert';
+  if (score < 4.5) return 'Skaliert';
   return 'Optimiert';
 }
 
-function badgeLevelKey(v) {
-  if (v >= 4)   return 'badge-blue';
-  if (v >= 3.5) return 'badge-green';
-  if (v >= 2.5) return 'badge-yellow';
-  if (v >= 2)   return 'badge-orange';
+function scoreBadgeClass(score) {
+  if (score >= 4)   return 'badge-blue';
+  if (score >= 3.5) return 'badge-green';
+  if (score >= 2.5) return 'badge-yellow';
+  if (score >= 2)   return 'badge-orange';
   return 'badge-red';
 }
 
-function priorityInfo(gap) {
-  if (gap >= 2.5) return { css: 'badge-red',    text: '🔴 Kritisch' };
-  if (gap >= 1.5) return { css: 'badge-orange', text: '🟠 Hoch' };
-  if (gap >= 0.8) return { css: 'badge-yellow', text: '🟡 Mittel' };
-  if (gap >= 0.3) return { css: 'badge-green',  text: '🟢 Niedrig' };
-  return { css: 'badge-blue', text: '✅ Gut' };
+function gapPriorityInfo(gapSize) {
+  if (gapSize >= 2.5) return { cssClass: 'badge-red',    label: '🔴 Kritisch' };
+  if (gapSize >= 1.5) return { cssClass: 'badge-orange', label: '🟠 Hoch' };
+  if (gapSize >= 0.8) return { cssClass: 'badge-yellow', label: '🟡 Mittel' };
+  if (gapSize >= 0.3) return { cssClass: 'badge-green',  label: '🟢 Niedrig' };
+  return { cssClass: 'badge-blue', label: '✅ Gut' };
 }
 
 // ===== COST EXTRACTION =====
 
 function extractCosts() {
-  const d   = state.config.costDefaults;
-  const ans = state.ans;
+  const defaults = state.config.costDefaults;
+  const answers  = state.answers;
   return {
-    cD:  ans.cost_designer     ?? d.designer,
-    cDv: ans.cost_developer    ?? d.developer,
-    cP:  ans.cost_pm           ?? d.pm,
-    nD:  ans.cost_numDesigners ?? d.numDesigners,
-    nDv: ans.cost_numDevs      ?? d.numDevs,
-    nP:  ans.cost_numPMs       ?? d.numPMs,
-    hY:  ans.cost_hoursYear    ?? d.hoursYear
+    designerRate:   answers.cost_designer     ?? defaults.designer,
+    developerRate:  answers.cost_developer    ?? defaults.developer,
+    pmRate:         answers.cost_pm           ?? defaults.pm,
+    designerCount:  answers.cost_numDesigners ?? defaults.numDesigners,
+    developerCount: answers.cost_numDevs      ?? defaults.numDevs,
+    pmCount:        answers.cost_numPMs       ?? defaults.numPMs,
+    hoursPerYear:   answers.cost_hoursYear    ?? defaults.hoursYear
   };
 }
 
-// ===== ROI / WASTE CALCULATION =====
+// ===== WASTE / ROI CALCULATION =====
 
-function wasteMult(l) {
-  return Math.max(0.05, 1 - (l - 1) / 4 * 0.95);
+function wasteMultiplier(maturityLevel) {
+  return Math.max(0.05, 1 - (maturityLevel - 1) / 4 * 0.95);
 }
 
-function calcWaste(scores, { cD, cDv, cP, nD, nDv, nP, hY }) {
-  const wf = state.config.wasteFractions;
-  let wasteNow    = 0;
-  let wasteTarget = 0;
+function calculateWaste(dimensionScores, { designerRate, developerRate, pmRate, designerCount, developerCount, pmCount, hoursPerYear }) {
+  const wasteFractions = state.config.wasteFractions;
+  let currentWaste  = 0;
+  let targetWaste   = 0;
 
-  scores.forEach((s, i) => {
-    const f    = wf[i];
-    const base = (f.d * nD * cD + f.v * nDv * cDv + f.p * nP * cP) * hY;
-    wasteNow    += base * wasteMult(s.score);
-    wasteTarget += base * wasteMult(4);
+  dimensionScores.forEach((dimension, index) => {
+    const fraction     = wasteFractions[index];
+    const annualBase   = (fraction.d * designerCount * designerRate
+                        + fraction.v * developerCount * developerRate
+                        + fraction.p * pmCount * pmRate)
+                        * hoursPerYear;
+    currentWaste  += annualBase * wasteMultiplier(dimension.score);
+    targetWaste   += annualBase * wasteMultiplier(4);
   });
 
-  return { wasteNow, wasteTarget, saving: wasteNow - wasteTarget };
+  return { currentWaste, targetWaste, annualSaving: currentWaste - targetWaste };
 }
 
-// ===== FORMATTING HELPERS =====
+// ===== FORMATTING =====
 
-function fmt(n) {
-  return n.toLocaleString('de-DE', { maximumFractionDigits: 0 });
+function formatNumber(number) {
+  return number.toLocaleString('de-DE', { maximumFractionDigits: 0 });
 }
 
-function fmtK(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + ' Mio €';
-  if (n >= 1e3) return Math.round(n / 1e3) + 'k €';
-  return Math.round(n) + ' €';
+function formatCompact(number) {
+  if (number >= 1e6) return (number / 1e6).toFixed(1) + ' Mio €';
+  if (number >= 1e3) return Math.round(number / 1e3) + 'k €';
+  return Math.round(number) + ' €';
 }
 
 // ===== KPI CARDS =====
 
-function addKPI(container, { level, value, label, badge }) {
-  const el = cloneTemplate('tpl-kpi');
-  el.dataset.level = level;
-  el.querySelector('.kv').textContent = value;
-  el.querySelector('.kl').textContent = label;
-  const ks = el.querySelector('.ks');
+function appendKPICard(container, { level, value, label, badge }) {
+  const card       = cloneTemplate('tpl-kpi');
+  card.dataset.level = level;
+  card.querySelector('.kv').textContent = value;
+  card.querySelector('.kl').textContent = label;
+  const badgeElement = card.querySelector('.ks');
   if (badge) {
-    ks.textContent = badge;
+    badgeElement.textContent = badge;
   } else {
-    ks.remove();
+    badgeElement.remove();
   }
-  container.appendChild(el);
+  container.appendChild(card);
 }
 
-function fillKPIs(container, avg, wasteNow, saving) {
-  const bench = state.config.benchmark;
-  const delta = avg - bench.marketAvg.avg;
-  const positive = delta >= 0;
+function fillKPICards(container, averageScore, currentWaste, annualSaving) {
+  const benchmark = state.config.benchmark;
+  const marketDelta     = averageScore - benchmark.marketAvg.avg;
+  const isAboveAverage  = marketDelta >= 0;
 
-  addKPI(container, {
-    level: levelKey(avg),
-    value: avg.toFixed(1),
+  appendKPICard(container, {
+    level: maturityLevelKey(averageScore),
+    value: averageScore.toFixed(1),
     label: 'Ihr Gesamt-Reifegrad',
-    badge: lvl(avg)
+    badge: maturityLabel(averageScore)
   });
 
-  addKPI(container, {
+  appendKPICard(container, {
     level: 'market',
-    value: bench.marketAvg.avg.toFixed(1),
+    value: benchmark.marketAvg.avg.toFixed(1),
     label: 'Marktdurchschnitt DACH',
-    badge: lvl(bench.marketAvg.avg)
+    badge: maturityLabel(benchmark.marketAvg.avg)
   });
 
-  addKPI(container, {
+  appendKPICard(container, {
     level: 'top',
-    value: bench.topPerformer.avg.toFixed(1),
+    value: benchmark.topPerformer.avg.toFixed(1),
     label: 'Top-Performer',
-    badge: lvl(bench.topPerformer.avg)
+    badge: maturityLabel(benchmark.topPerformer.avg)
   });
 
-  addKPI(container, {
-    level: positive ? 'positive' : 'negative',
-    value: `${positive ? '▲' : '▼'} ${Math.abs(delta).toFixed(1)}`,
+  appendKPICard(container, {
+    level: isAboveAverage ? 'positive' : 'negative',
+    value: `${isAboveAverage ? '▲' : '▼'} ${Math.abs(marketDelta).toFixed(1)}`,
     label: 'vs. Markt',
-    badge: positive ? 'Überdurchschnittlich' : 'Unter Durchschnitt'
+    badge: isAboveAverage ? 'Überdurchschnittlich' : 'Unter Durchschnitt'
   });
 
-  addKPI(container, {
+  appendKPICard(container, {
     level: 'waste',
-    value: fmtK(wasteNow),
+    value: formatCompact(currentWaste),
     label: 'Verschwendung / Jahr (aktuell)',
     badge: null
   });
 
-  addKPI(container, {
+  appendKPICard(container, {
     level: 'saving',
-    value: fmtK(saving),
+    value: formatCompact(annualSaving),
     label: 'Einsparpotenzial / Jahr',
     badge: 'bei Reifegrad 4.0'
   });
@@ -203,103 +192,102 @@ function fillKPIs(container, avg, wasteNow, saving) {
 
 // ===== RANKING TABLE =====
 
-function fillRankingTable(tbody) {
-  const bench  = state.config.benchmark;
-  const sorted = Object.entries(bench.byBranch).sort((a, b) => b[1] - a[1]);
-  const branch = (state.ans.d_branch ?? '').toLowerCase();
+function fillRankingTable(tableBody) {
+  const benchmark     = state.config.benchmark;
+  const sortedBranches = Object.entries(benchmark.byBranch).sort((a, b) => b[1] - a[1]);
+  const userBranch     = (state.answers.d_branch ?? '').toLowerCase();
 
-  sorted.forEach(([name, score], i) => {
-    const row    = cloneTemplate('tpl-rank-row');
-    const isYou  = branch && branch.includes(name.toLowerCase().split('/')[0].trim());
+  sortedBranches.forEach(([branchName, branchScore], position) => {
+    const row         = cloneTemplate('tpl-rank-row');
+    const isUserBranch = userBranch && userBranch.includes(branchName.toLowerCase().split('/')[0].trim());
 
-    if (isYou) row.classList.add('you');
+    if (isUserBranch) row.classList.add('you');
 
-    row.querySelector('.rank-pos').textContent   = i + 1;
-    row.querySelector('.rank-name').innerHTML     = `${isYou ? '→ ' : ''}<strong>${name}</strong>${isYou ? ' (Ihre Branche)' : ''}`;
-    row.querySelector('.rank-score').innerHTML    = `<strong>${score.toFixed(1)}</strong>`;
+    row.querySelector('.rank-pos').textContent   = position + 1;
+    row.querySelector('.rank-name').innerHTML     = `${isUserBranch ? '→ ' : ''}<strong>${branchName}</strong>${isUserBranch ? ' (Ihre Branche)' : ''}`;
+    row.querySelector('.rank-score').innerHTML    = `<strong>${branchScore.toFixed(1)}</strong>`;
 
     const badge = row.querySelector('.badge');
-    badge.dataset.level = badgeLevelKey(score).replace('badge-', '');
-    badge.classList.add(badgeLevelKey(score));
-    badge.textContent = lvl(score);
+    badge.classList.add(scoreBadgeClass(branchScore));
+    badge.textContent = maturityLabel(branchScore);
 
-    tbody.appendChild(row);
+    tableBody.appendChild(row);
   });
 }
 
 // ===== GAP ANALYSIS TABLE =====
 
-function fillGapTable(tbody, scores) {
-  const bench = state.config.benchmark;
-  const gaps  = scores
-    .map(s => ({
-      ...s,
-      top: bench.topPerformer[s.key] ?? 4.3,
-      gap: (bench.topPerformer[s.key] ?? 4.3) - s.score
+function fillGapAnalysisTable(tableBody, dimensionScores) {
+  const benchmark   = state.config.benchmark;
+  const gapAnalysis = dimensionScores
+    .map(dimension => ({
+      ...dimension,
+      topPerformerScore: benchmark.topPerformer[dimension.key] ?? 4.3,
+      gapToTop:          (benchmark.topPerformer[dimension.key] ?? 4.3) - dimension.score
     }))
-    .sort((a, b) => b.gap - a.gap);
+    .sort((a, b) => b.gapToTop - a.gapToTop);
 
-  gaps.forEach((g, i) => {
-    const row  = cloneTemplate('tpl-gap-row');
-    const prio = priorityInfo(g.gap);
+  gapAnalysis.forEach((gap, position) => {
+    const row      = cloneTemplate('tpl-gap-row');
+    const priority = gapPriorityInfo(gap.gapToTop);
 
-    row.querySelector('.gap-pos').textContent  = i + 1;
-    row.querySelector('.gap-name').innerHTML    = `<strong>${g.name}</strong>`;
+    row.querySelector('.gap-pos').textContent  = position + 1;
+    row.querySelector('.gap-name').innerHTML    = `<strong>${gap.name}</strong>`;
 
-    const scoreCell = row.querySelector('.gap-score');
-    scoreCell.textContent  = g.score.toFixed(1);
-    scoreCell.dataset.level = levelKey(g.score);
+    const scoreCell         = row.querySelector('.gap-score');
+    scoreCell.textContent   = gap.score.toFixed(1);
+    scoreCell.dataset.level = maturityLevelKey(gap.score);
 
-    row.querySelector('.gap-top').textContent   = g.top.toFixed(1);
-    row.querySelector('.gap-delta').textContent  = g.gap > 0 ? '-' + g.gap.toFixed(1) : '✅';
+    row.querySelector('.gap-top').textContent   = gap.topPerformerScore.toFixed(1);
+    row.querySelector('.gap-delta').textContent  = gap.gapToTop > 0 ? '-' + gap.gapToTop.toFixed(1) : '✅';
 
     const badge = row.querySelector('.badge');
-    badge.classList.add(prio.css);
-    badge.textContent = prio.text;
+    badge.classList.add(priority.cssClass);
+    badge.textContent = priority.label;
 
-    tbody.appendChild(row);
+    tableBody.appendChild(row);
   });
 }
 
 // ===== DIMENSION BARS =====
 
-function fillDimBars(container, scores) {
-  const bench = state.config.benchmark;
+function fillDimensionBars(container, dimensionScores) {
+  const benchmark = state.config.benchmark;
 
-  scores.forEach(s => {
-    const row     = cloneTemplate('tpl-dim-bar');
-    const pct     = (s.score / 5) * 100;
-    const topPct  = ((bench.topPerformer[s.key] ?? 4.3) / 5) * 100;
-    const avgPct  = (bench.marketAvg[s.key] / 5) * 100;
+  dimensionScores.forEach(dimension => {
+    const row                 = cloneTemplate('tpl-dim-bar');
+    const scorePercent        = (dimension.score / 5) * 100;
+    const topPerformerPercent = ((benchmark.topPerformer[dimension.key] ?? 4.3) / 5) * 100;
+    const marketAvgPercent    = (benchmark.marketAvg[dimension.key] / 5) * 100;
 
-    row.querySelector('.dim-lbl').textContent = s.name;
-    row.querySelector('.dim-val').textContent = s.score.toFixed(1);
+    row.querySelector('.dim-lbl').textContent = dimension.name;
+    row.querySelector('.dim-val').textContent = dimension.score.toFixed(1);
 
-    const fill = row.querySelector('.dim-fill');
-    fill.style.width = pct + '%';
-    fill.dataset.level = levelKey(s.score);
+    const fillBar          = row.querySelector('.dim-fill');
+    fillBar.style.width    = scorePercent + '%';
+    fillBar.dataset.level  = maturityLevelKey(dimension.score);
 
-    row.querySelector('.dim-bench').style.left     = topPct + '%';
-    row.querySelector('.dim-bench-avg').style.left  = avgPct + '%';
+    row.querySelector('.dim-bench').style.left     = topPerformerPercent + '%';
+    row.querySelector('.dim-bench-avg').style.left  = marketAvgPercent + '%';
 
     container.appendChild(row);
   });
 }
 
-// ===== CHART INIT =====
+// ===== CHART INITIALISATION =====
 
-function initRadarChart(scores) {
-  const bench = state.config.benchmark;
-  const ctx   = document.getElementById('chRadar').getContext('2d');
+function initRadarChart(dimensionScores) {
+  const benchmark    = state.config.benchmark;
+  const canvasContext = document.getElementById('chRadar').getContext('2d');
 
-  new Chart(ctx, {
+  new Chart(canvasContext, {
     type: 'radar',
     data: {
-      labels: scores.map(s => s.name),
+      labels: dimensionScores.map(dimension => dimension.name),
       datasets: [
         {
           label:                'Ihr Ergebnis',
-          data:                 scores.map(s => s.score),
+          data:                 dimensionScores.map(dimension => dimension.score),
           backgroundColor:      'rgba(0,76,147,.15)',
           borderColor:          '#004C93',
           borderWidth:          2,
@@ -308,7 +296,7 @@ function initRadarChart(scores) {
         },
         {
           label:           'Marktdurchschnitt',
-          data:            scores.map(s => bench.marketAvg[s.key]),
+          data:            dimensionScores.map(dimension => benchmark.marketAvg[dimension.key]),
           backgroundColor: 'rgba(156,163,175,.08)',
           borderColor:     '#9CA3AF',
           borderWidth:     1,
@@ -317,7 +305,7 @@ function initRadarChart(scores) {
         },
         {
           label:                'Top-Performer',
-          data:                 scores.map(s => bench.topPerformer[s.key]),
+          data:                 dimensionScores.map(dimension => benchmark.topPerformer[dimension.key]),
           backgroundColor:      'rgba(0,180,160,.08)',
           borderColor:          '#00B4A0',
           borderWidth:          2,
@@ -345,25 +333,28 @@ function initRadarChart(scores) {
   });
 }
 
-function initLevelsChart({ cD, cDv, cP, nD, nDv, nP, hY }) {
-  const ctx  = document.getElementById('chLevels').getContext('2d');
-  const wf   = state.config.wasteFractions;
+function initWasteLevelsChart({ designerRate, developerRate, pmRate, designerCount, developerCount, pmCount, hoursPerYear }) {
+  const canvasContext  = document.getElementById('chLevels').getContext('2d');
+  const wasteFractions = state.config.wasteFractions;
 
-  const wasteLvl = [1, 2, 3, 4, 5].map(l => {
-    let t = 0;
-    wf.forEach(f => {
-      t += (f.d * nD * cD + f.v * nDv * cDv + f.p * nP * cP) * hY * wasteMult(l);
+  const wasteByLevel = [1, 2, 3, 4, 5].map(level => {
+    let totalWaste = 0;
+    wasteFractions.forEach(fraction => {
+      totalWaste += (fraction.d * designerCount * designerRate
+                   + fraction.v * developerCount * developerRate
+                   + fraction.p * pmCount * pmRate)
+                   * hoursPerYear * wasteMultiplier(level);
     });
-    return t;
+    return totalWaste;
   });
 
-  new Chart(ctx, {
+  new Chart(canvasContext, {
     type: 'bar',
     data: {
       labels:   ['Stufe 1\nAd-hoc', 'Stufe 2\nEmerging', 'Stufe 3\nStrukturiert', 'Stufe 4\nSkaliert', 'Stufe 5\nOptimiert'],
       datasets: [{
         label:           'Verschwendung / Jahr',
-        data:            wasteLvl,
+        data:            wasteByLevel,
         backgroundColor: ['#FECACA', '#FDE68A', '#FDE68A', '#BBF7D0', '#BFDBFE'],
         borderColor:     ['#DC2626', '#D97706', '#D97706', '#16A34A', '#2563EB'],
         borderWidth:     2,
@@ -374,59 +365,59 @@ function initLevelsChart({ cD, cDv, cP, nD, nDv, nP, hY }) {
       responsive: true,
       indexAxis: 'y',
       scales: {
-        x: { ticks: { color: '#6B7280', callback: v => fmtK(v) }, grid: { color: 'rgba(209,213,219,.2)' } },
+        x: { ticks: { color: '#6B7280', callback: value => formatCompact(value) }, grid: { color: 'rgba(209,213,219,.2)' } },
         y: { ticks: { color: '#374151', font: { weight: '600' } }, grid: { display: false } }
       },
       plugins: {
         legend:  { display: false },
-        tooltip: { callbacks: { label: c => fmt(c.raw) + ' € / Jahr' } }
+        tooltip: { callbacks: { label: tooltipItem => formatNumber(tooltipItem.raw) + ' € / Jahr' } }
       }
     }
   });
 }
 
-function initROIChart(saving) {
-  const ctx = document.getElementById('chROI').getContext('2d');
-  const inv = saving * 0.4;
-  const yrs = [0, 1, 2, 3];
+function initROIChart(annualSaving) {
+  const canvasContext     = document.getElementById('chROI').getContext('2d');
+  const annualInvestment  = annualSaving * 0.4;
+  const years             = [0, 1, 2, 3];
 
-  const cumI = yrs.map(y => -inv * y);
-  const cumS = yrs.map(y => {
-    let s = 0;
-    for (let i = 0; i < y; i++) {
-      const r = i === 0 ? 0.3 : i === 1 ? 0.7 : 1;
-      s += saving * 0.75 * r;
+  const cumulativeInvestment = years.map(year => -annualInvestment * year);
+  const cumulativeSaving     = years.map(year => {
+    let totalSaving = 0;
+    for (let pastYear = 0; pastYear < year; pastYear++) {
+      const realizationRate = pastYear === 0 ? 0.3 : pastYear === 1 ? 0.7 : 1;
+      totalSaving += annualSaving * 0.75 * realizationRate;
     }
-    return s;
+    return totalSaving;
   });
-  const cumN = yrs.map((_, i) => cumS[i] + cumI[i]);
+  const cumulativeNetROI = years.map((_, index) => cumulativeSaving[index] + cumulativeInvestment[index]);
 
-  new Chart(ctx, {
+  new Chart(canvasContext, {
     type: 'line',
     data: {
       labels: ['Start', 'Jahr 1', 'Jahr 2', 'Jahr 3'],
       datasets: [
         {
           label:           'Kum. Investment',
-          data:            cumI,
+          data:            cumulativeInvestment,
           borderColor:     '#DC2626',
           backgroundColor: 'rgba(220,38,38,.07)',
           fill: true, tension: .3, borderWidth: 2
         },
         {
           label:           'Kum. Einsparung',
-          data:            cumS,
+          data:            cumulativeSaving,
           borderColor:     '#16A34A',
           backgroundColor: 'rgba(22,163,74,.07)',
           fill: true, tension: .3, borderWidth: 2
         },
         {
           label:                'Netto-ROI',
-          data:                 cumN,
+          data:                 cumulativeNetROI,
           borderColor:          '#004C93',
           borderWidth:          3,
           tension:              .3,
-          pointBackgroundColor: cumN.map(v => v >= 0 ? '#16A34A' : '#DC2626'),
+          pointBackgroundColor: cumulativeNetROI.map(value => value >= 0 ? '#16A34A' : '#DC2626'),
           pointRadius:          5
         }
       ]
@@ -434,12 +425,12 @@ function initROIChart(saving) {
     options: {
       responsive: true,
       scales: {
-        y: { ticks: { color: '#6B7280', callback: v => fmtK(v) }, grid: { color: 'rgba(209,213,219,.2)' } },
+        y: { ticks: { color: '#6B7280', callback: value => formatCompact(value) }, grid: { color: 'rgba(209,213,219,.2)' } },
         x: { ticks: { color: '#374151', font: { weight: '600' } }, grid: { display: false } }
       },
       plugins: {
         legend:  { labels: { color: '#374151', usePointStyle: true }, position: 'bottom' },
-        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmt(Math.round(c.raw)) + ' €' } }
+        tooltip: { callbacks: { label: tooltipItem => tooltipItem.dataset.label + ': ' + formatNumber(Math.round(tooltipItem.raw)) + ' €' } }
       }
     }
   });

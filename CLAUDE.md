@@ -8,10 +8,9 @@ Standalone HTML/JS/CSS tool. Iframe-ready for an Astro page. No build step, no f
 
 ---
 
-## Target Architecture
+## Architecture
 
 ```
-survey/
 ├── index.html
 ├── survey.config.json
 ├── css/
@@ -104,9 +103,21 @@ No global variables except the state object in `engine.js`.
 
 ---
 
+## Naming Conventions (Clean Code)
+
+- **Intention-revealing names** – every variable, function, and parameter must communicate its purpose without context. `designerRate` not `cD`. `annualSaving` not `saving`. `dimensionScores` not `scores`.
+- **No single-letter variables** – not in loops, not in callbacks, not in lambdas. Use `index` not `i`, `question` not `q`, `event` not `e`, `dimension` not `d`.
+- **No abbreviations** – `percent` not `pct`, `answer` not `ans`, `current` not `cur`, `template` not `tpl`, `element` not `el`. Exception: universally understood acronyms (HTML, CSS, KPI, ROI).
+- **Functions describe actions** – `calculateDimensionScore()` not `calcDim()`. `fillRankingTable()` not `buildRankingTable()` when cloning templates. `persistState()` not `save()` at the call site.
+- **Booleans read as conditions** – `isAnswered`, `isAboveAverage`, `isFirstStep`, `isUserBranch`.
+- **Collections are plural nouns** – `dimensionScores`, `likertQuestions`, `hourlyRates`, `failedIds`.
+- **No comments** – if a name needs a comment to explain what it does, the name is wrong. Comments are only for *why*, never for *what*.
+
+---
+
 ## Hard Rules
 
-- No code in `index.html` except shell markup and script tags
+- No code in `index.html` except shell markup, `<template>` elements, and script tags
 - No inline event handlers (`onclick="..."`) in rendered HTML
 - No `var` – only `const` / `let`
 - No state mutation outside `engine.js`
