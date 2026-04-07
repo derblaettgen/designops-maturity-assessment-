@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { isAnswered } from '../lib/scoring';
 import type { Question } from '../types/survey';
+import { registerQuestionCard, unregisterQuestionCard } from './questionCardRefs';
 import './QuestionCard.css';
 import { LikertScale } from './inputs/LikertScale';
 import { SelectInput } from './inputs/SelectInput';
@@ -29,6 +31,13 @@ function renderInput(question: Question) {
 export function QuestionCard({ question }: QuestionCardProps) {
   const answer = useSurveyStore(state => state.answers[question.id]);
   const hasError = useSurveyStore(state => state.failedIds.includes(question.id));
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!cardRef.current) return;
+    registerQuestionCard(question.id, cardRef.current);
+    return () => unregisterQuestionCard(question.id);
+  }, [question.id]);
 
   const className = [
     'question-card',
@@ -39,7 +48,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
     .join(' ');
 
   return (
-    <div className={className} id={`question-card-${question.id}`}>
+    <div className={className} ref={cardRef}>
       <div className="question-card__check">✓</div>
       <div className="question-card__id">
         {question.id.toUpperCase()}

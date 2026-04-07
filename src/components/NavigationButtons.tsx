@@ -1,4 +1,5 @@
 import { useSurveyStore } from '../store/useSurveyStore';
+import { scrollToQuestionCard } from './questionCardRefs';
 import './NavigationButtons.css';
 
 interface NavigationButtonsProps {
@@ -15,20 +16,15 @@ export function NavigationButtons({ onSubmit }: NavigationButtonsProps) {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === totalSteps - 1;
 
-  const scrollToFirstError = (failedIds: string[]) => {
-    const firstErrorCard = document.getElementById('question-card-' + failedIds[0]);
-    firstErrorCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
-
   const handleNext = () => {
     const result = goNext();
-    if (!result.valid) scrollToFirstError(result.failedIds);
+    if (!result.valid) scrollToQuestionCard(result.failedIds[0]);
   };
 
   const handleSubmit = () => {
     const result = submit();
     if (!result.valid) {
-      scrollToFirstError(result.failedIds);
+      scrollToQuestionCard(result.failedIds[0]);
       return;
     }
     onSubmit();
