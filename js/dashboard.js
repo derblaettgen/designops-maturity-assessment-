@@ -102,9 +102,9 @@ function calculateWaste(dimensionScores, { designerRate, developerRate, pmRate, 
 
   dimensionScores.forEach(dimension => {
     const fraction     = dimension.waste;
-    const annualBase   = (fraction.d * designerCount * designerRate
-                        + fraction.v * developerCount * developerRate
-                        + fraction.p * pmCount * pmRate)
+    const annualBase   = (fraction.design     * designerCount  * designerRate
+                        + fraction.validation * developerCount * developerRate
+                        + fraction.production * pmCount        * pmRate)
                         * hoursPerYear;
     currentWaste  += annualBase * wasteMultiplier(dimension.score);
     targetWaste   += annualBase * wasteMultiplier(4);
@@ -335,9 +335,9 @@ function initWasteLevelsChart({ designerRate, developerRate, pmRate, designerCou
     let totalWaste = 0;
     dimensions.forEach(dimension => {
       const fraction = dimension.waste;
-      totalWaste += (fraction.d * designerCount * designerRate
-                   + fraction.v * developerCount * developerRate
-                   + fraction.p * pmCount * pmRate)
+      totalWaste += (fraction.design     * designerCount  * designerRate
+                   + fraction.validation * developerCount * developerRate
+                   + fraction.production * pmCount        * pmRate)
                    * hoursPerYear * wasteMultiplier(level);
     });
     return totalWaste;

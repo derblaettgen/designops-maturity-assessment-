@@ -8,7 +8,7 @@
     "locale": "de-DE"
   },
 
-  "labels": [
+  "likertLabels": [
     "Trifft gar\nnicht zu",
     "Trifft\nkaum zu",
     "Trifft\nteilweise zu",
@@ -61,7 +61,7 @@
       "ids":  ["d1_1","d1_2","d1_3","d1_4","d1_5","d1_6"],
       "marketAvg":    2.9,
       "topPerformer": 4.5,
-      "waste": { "d": 0.12, "v": 0.03, "p": 0.05 }
+      "waste": { "design": 0.12, "validation": 0.03, "production": 0.05 }
     },
     {
       "key":  "d2",
@@ -69,7 +69,7 @@
       "ids":  ["d2_1","d2_2","d2_3","d2_4","d2_5","d2_6"],
       "marketAvg":    3.0,
       "topPerformer": 4.6,
-      "waste": { "d": 0.15, "v": 0.10, "p": 0.12 }
+      "waste": { "design": 0.15, "validation": 0.10, "production": 0.12 }
     },
     {
       "key":  "d3",
@@ -77,7 +77,7 @@
       "ids":  ["d3_1","d3_2","d3_3","d3_4","d3_5"],
       "marketAvg":    3.4,
       "topPerformer": 4.7,
-      "waste": { "d": 0.08, "v": 0.05, "p": 0.02 }
+      "waste": { "design": 0.08, "validation": 0.05, "production": 0.02 }
     },
     {
       "key":  "d4",
@@ -85,7 +85,7 @@
       "ids":  ["d4_1","d4_2","d4_3","d4_4","d4_5","d4_6"],
       "marketAvg":    2.4,
       "topPerformer": 4.3,
-      "waste": { "d": 0.18, "v": 0.15, "p": 0.03 }
+      "waste": { "design": 0.18, "validation": 0.15, "production": 0.03 }
     },
     {
       "key":  "d5",
@@ -93,7 +93,7 @@
       "ids":  ["d5_1","d5_2","d5_3","d5_4"],
       "marketAvg":    2.3,
       "topPerformer": 4.1,
-      "waste": { "d": 0.10, "v": 0.05, "p": 0.08 }
+      "waste": { "design": 0.10, "validation": 0.05, "production": 0.08 }
     },
     {
       "key":  "d6",
@@ -101,7 +101,7 @@
       "ids":  ["d6_1","d6_2","d6_3","d6_4"],
       "marketAvg":    2.0,
       "topPerformer": 3.9,
-      "waste": { "d": 0.05, "v": 0.02, "p": 0.06 }
+      "waste": { "design": 0.05, "validation": 0.02, "production": 0.06 }
     },
     {
       "key":  "d7",
@@ -109,7 +109,7 @@
       "ids":  ["d7_1","d7_2","d7_3","d7_4"],
       "marketAvg":    3.2,
       "topPerformer": 4.5,
-      "waste": { "d": 0.10, "v": 0.08, "p": 0.10 }
+      "waste": { "design": 0.10, "validation": 0.08, "production": 0.10 }
     },
     {
       "key":  "d8",
@@ -117,7 +117,7 @@
       "ids":  ["d8_1","d8_2","d8_3","d8_4"],
       "marketAvg":    2.5,
       "topPerformer": 4.2,
-      "waste": { "d": 0.06, "v": 0.02, "p": 0.08 }
+      "waste": { "design": 0.06, "validation": 0.02, "production": 0.08 }
     }
   ],
 

@@ -1,7 +1,7 @@
 import { state } from '../engine.js';
 
 export function buildLikertScale(question, currentAnswer) {
-  const labels = state.config.labels;
+  const labels = state.config.likertLabels;
   let html = `<div class="likert">`;
   for (let scale = 1; scale <= 5; scale++) {
     html += `<div class="opt">`;
