@@ -157,6 +157,7 @@ function handleSubmit() {
   document.getElementById('progTime').textContent = '';
 
   renderDashboard();
+  smoothScrollTo(0, 700);
 }
 
 // ===== SCROLL =====
