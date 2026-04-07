@@ -54,73 +54,6 @@
     }
   },
 
-  "dimensions": [
-    {
-      "key":  "d1",
-      "name": "People & Team",
-      "ids":  ["d1_1","d1_2","d1_3","d1_4","d1_5","d1_6"],
-      "marketAvg":    2.9,
-      "topPerformer": 4.5,
-      "waste": { "design": 0.12, "validation": 0.03, "production": 0.05 }
-    },
-    {
-      "key":  "d2",
-      "name": "Prozesse",
-      "ids":  ["d2_1","d2_2","d2_3","d2_4","d2_5","d2_6"],
-      "marketAvg":    3.0,
-      "topPerformer": 4.6,
-      "waste": { "design": 0.15, "validation": 0.10, "production": 0.12 }
-    },
-    {
-      "key":  "d3",
-      "name": "Tools & Tech",
-      "ids":  ["d3_1","d3_2","d3_3","d3_4","d3_5"],
-      "marketAvg":    3.4,
-      "topPerformer": 4.7,
-      "waste": { "design": 0.08, "validation": 0.05, "production": 0.02 }
-    },
-    {
-      "key":  "d4",
-      "name": "Design System",
-      "ids":  ["d4_1","d4_2","d4_3","d4_4","d4_5","d4_6"],
-      "marketAvg":    2.4,
-      "topPerformer": 4.3,
-      "waste": { "design": 0.18, "validation": 0.15, "production": 0.03 }
-    },
-    {
-      "key":  "d5",
-      "name": "Research",
-      "ids":  ["d5_1","d5_2","d5_3","d5_4"],
-      "marketAvg":    2.3,
-      "topPerformer": 4.1,
-      "waste": { "design": 0.10, "validation": 0.05, "production": 0.08 }
-    },
-    {
-      "key":  "d6",
-      "name": "Metriken",
-      "ids":  ["d6_1","d6_2","d6_3","d6_4"],
-      "marketAvg":    2.0,
-      "topPerformer": 3.9,
-      "waste": { "design": 0.05, "validation": 0.02, "production": 0.06 }
-    },
-    {
-      "key":  "d7",
-      "name": "Kultur",
-      "ids":  ["d7_1","d7_2","d7_3","d7_4"],
-      "marketAvg":    3.2,
-      "topPerformer": 4.5,
-      "waste": { "design": 0.10, "validation": 0.08, "production": 0.10 }
-    },
-    {
-      "key":  "d8",
-      "name": "Governance",
-      "ids":  ["d8_1","d8_2","d8_3","d8_4"],
-      "marketAvg":    2.5,
-      "topPerformer": 4.2,
-      "waste": { "design": 0.06, "validation": 0.02, "production": 0.08 }
-    }
-  ],
-
   "sections": [
     {
       "id":    "demo",
@@ -280,11 +213,20 @@
       ]
     },
     {
-      "id":    "d1",
+      "id":    "people",
       "name":  "People",
       "icon":  "👥",
       "title": "Dimension 1: People & Team",
       "desc":  "Teamstruktur, Karrierepfade, Weiterbildung und Community.",
+      "dimensions": [
+        {
+          "key":  "d1",
+          "name": "People & Team",
+          "marketAvg":    2.9,
+          "topPerformer": 4.5,
+          "waste": { "design": 0.12, "validation": 0.03, "production": 0.05 }
+        }
+      ],
       "questions": [
         { "id": "d1_1", "text": "Es gibt klar definierte Rollen und Verantwortlichkeiten im Design-Team.", "type": "likert", "req": true },
         { "id": "d1_2", "text": "Es existiert ein standardisierter Onboarding-Prozess für Designer:innen.", "type": "likert", "req": true },
@@ -296,11 +238,20 @@
       ]
     },
     {
-      "id":    "d2",
+      "id":    "processes",
       "name":  "Prozesse",
       "icon":  "⚙️",
       "title": "Dimension 2: Prozesse & Workflows",
       "desc":  "Standardisierung, Handoffs, Reviews und Kapazitätsplanung.",
+      "dimensions": [
+        {
+          "key":  "d2",
+          "name": "Prozesse",
+          "marketAvg":    3.0,
+          "topPerformer": 4.6,
+          "waste": { "design": 0.15, "validation": 0.10, "production": 0.12 }
+        }
+      ],
       "questions": [
         { "id": "d2_1", "text": "Design-Prozesse sind dokumentiert und zugänglich.", "type": "likert", "req": true },
         { "id": "d2_2", "text": "Es gibt einen definierten Handoff-Prozess (Design → Dev).", "type": "likert", "req": true },
@@ -311,11 +262,20 @@
       ]
     },
     {
-      "id":    "d3",
+      "id":    "tools",
       "name":  "Tools",
       "icon":  "🧰",
       "title": "Dimension 3: Tools & Technologie",
       "desc":  "Tool-Stack, Lizenzen, Automatisierung und KI-Einsatz.",
+      "dimensions": [
+        {
+          "key":  "d3",
+          "name": "Tools & Tech",
+          "marketAvg":    3.4,
+          "topPerformer": 4.7,
+          "waste": { "design": 0.08, "validation": 0.05, "production": 0.02 }
+        }
+      ],
       "questions": [
         { "id": "d3_1", "text": "Es gibt einen standardisierten Design-Tool-Stack.", "type": "likert", "req": true },
         { "id": "d3_2", "text": "Lizenzen werden zentral verwaltet und budgetiert.", "type": "likert", "req": true },
@@ -335,11 +295,20 @@
       ]
     },
     {
-      "id":    "d4",
+      "id":    "design_system",
       "name":  "Design System",
       "icon":  "📚",
       "title": "Dimension 4: Design System",
       "desc":  "Existenz, Governance, Adoption und Code-Synchronisation.",
+      "dimensions": [
+        {
+          "key":  "d4",
+          "name": "Design System",
+          "marketAvg":    2.4,
+          "topPerformer": 4.3,
+          "waste": { "design": 0.18, "validation": 0.15, "production": 0.03 }
+        }
+      ],
       "questions": [
         { "id": "d4_1", "text": "Es existiert ein dokumentiertes, gepflegtes Design System.", "type": "likert", "req": true },
         { "id": "d4_2", "text": "Es gibt ein Governance-Modell (Verantwortlichkeiten, Contribution).", "type": "likert", "req": true },
@@ -350,11 +319,27 @@
       ]
     },
     {
-      "id":    "d56",
+      "id":    "research_metrics",
       "name":  "Research & Metriken",
       "icon":  "🔬",
       "title": "Research & Insights · Metriken & Impact",
       "desc":  "Research Ops, Wissensmanagement, Design-KPIs und ROI.",
+      "dimensions": [
+        {
+          "key":  "d5",
+          "name": "Research",
+          "marketAvg":    2.3,
+          "topPerformer": 4.1,
+          "waste": { "design": 0.10, "validation": 0.05, "production": 0.08 }
+        },
+        {
+          "key":  "d6",
+          "name": "Metriken",
+          "marketAvg":    2.0,
+          "topPerformer": 3.9,
+          "waste": { "design": 0.05, "validation": 0.02, "production": 0.06 }
+        }
+      ],
       "questions": [
         { "id": "d5_1", "text": "UX Research wird regelmäßig und systematisch durchgeführt.", "type": "likert", "req": true },
         { "id": "d5_2", "text": "Es gibt ein zentrales Research-Repository.", "type": "likert", "req": true },
@@ -367,11 +352,27 @@
       ]
     },
     {
-      "id":    "d78",
+      "id":    "culture_governance",
       "name":  "Kultur & Governance",
       "icon":  "🤝",
       "title": "Kultur & Governance",
       "desc":  "Cross-funktionale Zusammenarbeit, Strategy Alignment, Accessibility.",
+      "dimensions": [
+        {
+          "key":  "d7",
+          "name": "Kultur",
+          "marketAvg":    3.2,
+          "topPerformer": 4.5,
+          "waste": { "design": 0.10, "validation": 0.08, "production": 0.10 }
+        },
+        {
+          "key":  "d8",
+          "name": "Governance",
+          "marketAvg":    2.5,
+          "topPerformer": 4.2,
+          "waste": { "design": 0.06, "validation": 0.02, "production": 0.08 }
+        }
+      ],
       "questions": [
         { "id": "d7_1", "text": "Designer:innen arbeiten cross-funktional eng mit Product & Engineering.", "type": "likert", "req": true },
         { "id": "d7_2", "text": "Regelmäßige Design Critiques / Peer Reviews sind ein festes Ritual.", "type": "likert", "req": true },

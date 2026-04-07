@@ -83,10 +83,22 @@ export function calculateDimensionScore(questionIds) {
     : 0;
 }
 
+export function getAllDimensions() {
+  return state.config.sections.flatMap(section => section.dimensions ?? []);
+}
+
+function questionIdsForDimension(dimensionKey) {
+  const prefix = dimensionKey + '_';
+  return state.config.sections
+    .flatMap(section => section.questions)
+    .filter(question => question.type === 'likert' && question.id.startsWith(prefix))
+    .map(question => question.id);
+}
+
 export function getAllDimensionScores() {
-  return state.config.dimensions.map(dimension => ({
+  return getAllDimensions().map(dimension => ({
     ...dimension,
-    score: calculateDimensionScore(dimension.ids)
+    score: calculateDimensionScore(questionIdsForDimension(dimension.key))
   }));
 }
 

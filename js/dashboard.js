@@ -1,4 +1,4 @@
-import { state, getAllDimensionScores } from './engine.js';
+import { state, getAllDimensionScores, getAllDimensions } from './engine.js';
 
 // ===== TEMPLATE HELPERS =====
 
@@ -329,7 +329,7 @@ function initRadarChart(dimensionScores) {
 
 function initWasteLevelsChart({ designerRate, developerRate, pmRate, designerCount, developerCount, pmCount, hoursPerYear }) {
   const canvasContext  = document.getElementById('chLevels').getContext('2d');
-  const dimensions     = state.config.dimensions;
+  const dimensions     = getAllDimensions();
 
   const wasteByLevel = [1, 2, 3, 4, 5].map(level => {
     let totalWaste = 0;
