@@ -1,0 +1,37 @@
+/* SectionProgressBar.css — likert-only completion bar inside a step */
+
+.cb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: var(--color-brand-lightest);
+  border-radius: var(--radius-sm);
+}
+.cb-label {
+  font-size: var(--text-xs);
+  color: var(--color-brand);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cb-track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.cb-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+  transition: width .5s var(--ease-standard);
+}
+.cb-pct {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-success);
+  min-width: 35px;
+  text-align: right;
+}

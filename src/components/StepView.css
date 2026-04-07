@@ -1,0 +1,48 @@
+/* StepView.css — survey container, step entrance/exit transitions */
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  overflow-x: hidden;
+}
+
+.step {
+  display: none;
+}
+.step.active {
+  display: block;
+  animation: stepEnterFromRight var(--duration-layout) var(--ease-enter) both;
+}
+.step.active.enter-from-left {
+  animation-name: stepEnterFromLeft;
+}
+.step.exit-to-left {
+  display: block;
+  animation: stepExitToLeft var(--duration-slow) var(--ease-exit) both;
+}
+.step.exit-to-right {
+  display: block;
+  animation: stepExitToRight var(--duration-slow) var(--ease-exit) both;
+}
+
+@keyframes stepEnterFromRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes stepEnterFromLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes stepExitToLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-60px); }
+}
+@keyframes stepExitToRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(60px); }
+}
+
+@media (max-width: 700px) {
+  .container { padding: 20px 16px 48px; }
+}

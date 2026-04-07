@@ -1,0 +1,55 @@
+/* LikertScale.css — 5-point scale (radio + label, hover/checked transforms) */
+
+.likert {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.likert .opt { flex: 1; }
+.likert input { display: none; }
+.likert label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 4px 12px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-gray-200);
+  cursor: pointer;
+  transition: all .2s var(--ease-standard);
+  text-align: center;
+  background: var(--color-white);
+}
+.likert label:hover {
+  border-color: var(--color-brand);
+  background: var(--color-brand-lightest);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,76,147,.08);
+}
+.likert input:checked + label {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,76,147,.2);
+}
+.likert .num {
+  font-size: 1.4em;
+  font-weight: 800;
+  line-height: 1;
+}
+.likert .lbl {
+  font-size: .58em;
+  line-height: 1.25;
+  font-weight: 500;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .likert       { gap: 4px; }
+  .likert label { padding: 10px 2px 8px; }
+  .likert .num  { font-size: 1.1em; }
+  .likert .lbl  { font-size: .5em; }
+}

@@ -1,0 +1,87 @@
+/* KpiCard.css — KPI grid + cards + maturity-level data-attribute color rules */
+
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.dash-kpi {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border-top: 3px solid var(--color-brand);
+  transition: box-shadow .2s;
+}
+.dash-kpi:hover { box-shadow: var(--shadow-lg); }
+.dash-kpi .kv {
+  font-size: var(--text-kpi);
+  font-weight: 900;
+  line-height: 1.1;
+}
+.dash-kpi .kl {
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+.dash-kpi .ks {
+  font-size: var(--text-xs);
+  margin-top: 8px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+/* ===== DATA-LEVEL: maturity color mapping ===== */
+/* 5 maturity levels — applied via data-level on KPIs */
+.dash-kpi[data-level="critical"]   { border-top-color: var(--color-danger); }
+.dash-kpi[data-level="critical"] .kv { color: var(--color-danger); }
+.dash-kpi[data-level="critical"] .ks { background: #FEE2E222; color: var(--color-danger); }
+
+.dash-kpi[data-level="low"]   { border-top-color: var(--color-warning); }
+.dash-kpi[data-level="low"] .kv { color: var(--color-warning); }
+.dash-kpi[data-level="low"] .ks { background: #FEF3C7; color: #92400E; }
+
+.dash-kpi[data-level="mid"]   { border-top-color: #CA8A04; }
+.dash-kpi[data-level="mid"] .kv { color: #CA8A04; }
+.dash-kpi[data-level="mid"] .ks { background: #FEF9C3; color: #854D0E; }
+
+.dash-kpi[data-level="good"]   { border-top-color: var(--color-success); }
+.dash-kpi[data-level="good"] .kv { color: var(--color-success); }
+.dash-kpi[data-level="good"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="excellent"]   { border-top-color: var(--color-brand); }
+.dash-kpi[data-level="excellent"] .kv { color: var(--color-brand); }
+.dash-kpi[data-level="excellent"] .ks { background: #DBEAFE; color: #1E40AF; }
+
+/* Semantic levels for special KPI cards */
+.dash-kpi[data-level="market"]   { border-top-color: var(--color-gray-400); }
+.dash-kpi[data-level="market"] .kv { color: var(--color-gray-500); }
+.dash-kpi[data-level="market"] .ks { background: var(--color-gray-100); color: var(--color-gray-500); }
+
+.dash-kpi[data-level="top"]   { border-top-color: var(--color-success); }
+.dash-kpi[data-level="top"] .kv { color: var(--color-success); }
+.dash-kpi[data-level="top"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="positive"]   { border-top-color: var(--color-success); }
+.dash-kpi[data-level="positive"] .kv { color: var(--color-success); }
+.dash-kpi[data-level="positive"] .ks { background: #DCFCE7; color: #166534; }
+
+.dash-kpi[data-level="negative"]   { border-top-color: var(--color-warning); }
+.dash-kpi[data-level="negative"] .kv { color: var(--color-warning); }
+.dash-kpi[data-level="negative"] .ks { background: #FEF3C7; color: #92400E; }
+
+.dash-kpi[data-level="waste"]   { border-top-color: var(--color-danger); }
+.dash-kpi[data-level="waste"] .kv { color: var(--color-danger); }
+
+.dash-kpi[data-level="saving"]   { border-top-color: var(--color-success); }
+.dash-kpi[data-level="saving"] .kv { color: var(--color-success); }
+.dash-kpi[data-level="saving"] .ks { background: #DCFCE7; color: #166534; }
+
+@media (max-width: 700px) {
+  .dash-kpis { grid-template-columns: repeat(2, 1fr); }
+}

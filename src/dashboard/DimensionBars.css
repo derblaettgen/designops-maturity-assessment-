@@ -1,0 +1,96 @@
+/* DimensionBars.css — per-dimension fill bars + benchmark markers + legend */
+
+.dim-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dim-lbl {
+  width: 110px;
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  text-align: right;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.dim-track {
+  flex: 1;
+  height: 12px;
+  background: var(--color-gray-100);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+.dim-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 1s var(--ease-standard);
+  position: relative;
+}
+/* Dim bar fill colors by data-level */
+.dim-fill[data-level="critical"] { background: var(--color-danger); }
+.dim-fill[data-level="low"]      { background: var(--color-warning); }
+.dim-fill[data-level="mid"]      { background: #CA8A04; }
+.dim-fill[data-level="good"]     { background: var(--color-success); }
+.dim-fill[data-level="excellent"]{ background: var(--color-brand); }
+
+.dim-bench {
+  position: absolute;
+  height: 100%;
+  width: 2px;
+  background: var(--color-warning);
+  top: 0;
+}
+.dim-bench-avg {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  width: 2px;
+  border-left: 2px dashed var(--color-gray-300);
+}
+.dim-val {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  width: 32px;
+  color: var(--color-gray-700);
+}
+
+.bench-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  flex-wrap: wrap;
+}
+.bench-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.bench-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bench-legend .dot--user   { background: var(--color-brand); }
+.bench-legend .dot--market { background: var(--color-gray-400); }
+.bench-legend .line {
+  width: 14px;
+  height: 2px;
+  background: var(--color-warning);
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.bench-legend .line-dashed {
+  width: 14px;
+  height: 2px;
+  flex-shrink: 0;
+  border-top: 2px dashed var(--color-gray-300);
+}
+
+@media (max-width: 700px) {
+  .dim-lbl { width: 75px; font-size: .65em; }
+}

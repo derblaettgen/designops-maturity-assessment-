@@ -1,0 +1,84 @@
+/* tokens.css — design tokens (CSS custom properties) */
+
+:root {
+  /* Brand */
+  --color-brand:          #004C93;
+  --color-brand-dark:     #00336A;
+  --color-brand-deeper:   #001A3D;
+  --color-brand-light:    #E6EFF8;
+  --color-brand-lightest: #F2F7FC;
+
+  /* Interactive */
+  --color-accent:       #009FE3;
+  --color-success:      #00B4A0;
+  --color-success-dark: #009688;
+  --color-warning:      #ED6B22;
+  --color-danger:       #E53E3E;
+
+  /* Surfaces */
+  --color-surface:      #FFFFFF;
+  --color-bg:           #F7FAFC;
+  --color-dark-surface: #1A1D2B;
+
+  /* Text */
+  --color-text-primary:   #212529;
+  --color-text-secondary: #4A5568;
+  --color-text-muted:     #718096;
+  --color-text-disabled:  #A0AEC0;
+
+  /* Grays */
+  --color-gray-900: #212529;
+  --color-gray-700: #4A5568;
+  --color-gray-500: #718096;
+  --color-gray-400: #A0AEC0;
+  --color-gray-300: #CBD5E0;
+  --color-gray-200: #E2E8F0;
+  --color-gray-100: #F7FAFC;
+  --color-white:    #FFFFFF;
+
+  /* Borders */
+  --color-border:        #E2E8F0;
+  --color-border-strong: #CBD5E0;
+
+  /* Shape */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-full: 9999px;
+
+  /* Shadows — blue-tinted */
+  --shadow-sm: 0 1px 4px rgba(0, 76, 147, 0.05);
+  --shadow-md: 0 2px 16px rgba(0, 76, 147, 0.07);
+  --shadow-lg: 0 8px 40px rgba(0, 76, 147, 0.10);
+  --shadow-xl: 0 12px 48px rgba(0, 76, 147, 0.14);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-enter:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+  --duration-layout: 500ms;
+
+  /* Type scale */
+  --text-xs:   0.7rem;
+  --text-sm:   0.87rem;
+  --text-base: 0.92rem;
+  --text-lg:   1.3rem;
+  --text-kpi:  2rem;
+  --text-roi:  2.75rem;
+
+  /* Spacing */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}

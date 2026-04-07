@@ -1,0 +1,47 @@
+/* MultiSelect.css — chips (checkbox + label, hover/checked toggle) */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.chip { position: relative; }
+.chip input { display: none; }
+.chip label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-gray-200);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all .2s var(--ease-standard);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  user-select: none;
+}
+.chip label:hover {
+  border-color: var(--color-brand);
+  background: var(--color-brand-lightest);
+  color: var(--color-brand);
+}
+.chip input:checked + label {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: var(--color-white);
+}
+.chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--color-gray-300);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.chip input:checked + label .chip-dot {
+  background: var(--color-white);
+  border-color: var(--color-white);
+}

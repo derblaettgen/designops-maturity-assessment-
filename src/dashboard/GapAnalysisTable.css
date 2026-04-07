@@ -1,0 +1,9 @@
+/* GapAnalysisTable.css — score colors by maturity level + green top-performer column */
+
+.gap-score[data-level="critical"] { color: var(--color-danger); font-weight: 700; }
+.gap-score[data-level="low"]      { color: var(--color-warning); font-weight: 700; }
+.gap-score[data-level="mid"]      { color: #CA8A04; font-weight: 700; }
+.gap-score[data-level="good"]     { color: var(--color-success); font-weight: 700; }
+.gap-score[data-level="excellent"]{ color: var(--color-brand); font-weight: 700; }
+
+.gap-top { color: var(--color-success); font-weight: 700; }

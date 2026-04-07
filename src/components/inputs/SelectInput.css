@@ -1,0 +1,36 @@
+/* SelectInput.css — wrapped <select> with custom dropdown arrow */
+
+.sel-wrap { position: relative; margin-top: 12px; }
+.sel-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-400);
+  pointer-events: none;
+  font-size: .9em;
+}
+.sel-wrap select {
+  width: 100%;
+  padding: 14px 44px 14px 16px;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.sel-wrap select:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(0,76,147,.08);
+}
+.sel-wrap select.filled {
+  border-color: var(--color-success);
+  color: var(--color-gray-900);
+}

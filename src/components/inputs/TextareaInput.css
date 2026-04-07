@@ -1,0 +1,21 @@
+/* TextareaInput.css — optional comment textarea */
+
+.tarea {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  transition: border-color .2s, box-shadow .2s;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+.tarea:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(0,76,147,.08);
+}
+.tarea::placeholder { color: var(--color-gray-400); }
