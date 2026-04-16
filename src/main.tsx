@@ -30,6 +30,8 @@ useSurveyStore.subscribe(state => {
   }, PERSIST_DEBOUNCE_MS);
 });
 
+console.log("Survey is alive and running!");
+
 useSurveyStore.getState().init(surveyConfig, load());
 
 const rootElement = document.getElementById('root');
