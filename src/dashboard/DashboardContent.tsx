@@ -115,6 +115,26 @@ export function DashboardContent({
     },
   ];
 
+  const subject = `Interesse an Beratungsgespräch zum DesignOps Maturity Assessment`;
+  const body = `Hallo adesso Team,
+
+  ich habe mein DesignOps Maturity Ergebnis erhalten und möchte gerne ein Beratungsgespräch vereinbaren, um die Ergebnisse zu besprechen und nächste Schritte abzuleiten.
+
+  Mein aktueller Reifegrad: ${formatScore(overallScore)}
+  Mein Hauptinteresse:
+  - Ergebnisse besprechen,
+  - Maßnahmenplan ableiten,
+  - Best-Practices und Ressourcen,
+  - Individuelle Beratung,
+  - Sonstiges: [bitte hier ergänzen]
+
+  Ich freue mich auf Ihre Rückmeldung und die Möglichkeit, gemeinsam die nächsten Schritte zu planen.
+
+  Mit freundlichen Grüßen,
+  [Ihr Name]`;
+
+  const mailtoLink = `mailto:andreas.joerder@adesso.de?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
   return (
     <div className="dashboard active">
       <div className="dash-hero" data-pdf-block>
@@ -219,12 +239,12 @@ export function DashboardContent({
           individuelle Auswertung als als fundierte Basis für Ihren DesignOps Business Case – und lassen Sie uns gemeinsam die nächsten Schritte ableiten.
         </p>
         <a
-          href="mailto:andreas.joerder@adesso.de?subject=Interesse an Beratungsgespräch zum DesignOps Maturity Assessment&body=Hallo%20adesso%20Team,%0D%0A%0D%0Aich%20habe%20mein%20DesignOps%20Maturity%20Ergebnis%20erhalten%20und%20möchte%20gerne%20ein%20Beratungsgespräch%20vereinbaren,%20um%20die%20Ergebnisse%20zu%20besprechen%20und%20nächste%20Schritte%20abzuleiten.%0D%0A%0D%0AMein%20aktueller%20Reifegrad:%20${formatScore(overallScore)}%0D%0AMein%20Hauptinteresse:%0D%0A- %20Ergebnisse%20besprechen,%0D%0A- %20Maßnahmenplan%20ableiten,%0D%0A- %20Best-Practices%20und%20Ressourcen,%0D%0A- %20Individuelle Beratung,%0D%0A- %20Sonstiges:%20[bitte hier ergänzen]%0D%0A%0D%0AIch freue mich auf Ihre Rückmeldung und die Möglichkeit, gemeinsam die nächsten Schritte zu planen.%0D%0A%0D%0AMit freundlichen Grüßen,%0D%0A[Ihr Name]"
+          href={mailtoLink}
           target="_blank"
           rel="noreferrer"
           className="btn btn-primary"
         >
-          Jetzt Beratungsgespräch vereinbaren 📧
+          Jetzt Beratungsgespräch vereinbaren
         </a>
       </div>
     </div>
