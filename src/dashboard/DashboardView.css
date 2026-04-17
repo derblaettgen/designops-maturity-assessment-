@@ -47,6 +47,61 @@
   @media (max-width: 700px) { padding: 24px 20px; }
 }
 
+.dash-hero__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+
+  @media (max-width: 700px) {
+    flex-direction: column;
+  }
+}
+
+.dash-hero__actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+
+  @media (max-width: 700px) {
+    width: 100%;
+
+    .btn { flex: 1; }
+  }
+}
+
+.share-dropdown {
+  position: relative;
+}
+
+.share-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  padding: 6px 0;
+  z-index: 10;
+}
+
+.share-dropdown__item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--color-dark-surface);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-gray-100);
+  }
+}
+
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
