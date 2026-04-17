@@ -31,7 +31,7 @@ export function SurveyPage() {
     submitToMongoDB(config, answers, results)
       .then(documentId => {
         clear();
-        setShareUrl(`${window.location.origin}/result/${documentId}`);
+        setShareUrl(`${window.location.origin}/survey/result/${documentId}`);
       })
       .catch(() => {
         // Dashboard wird trotzdem angezeigt, Daten sind im Store
