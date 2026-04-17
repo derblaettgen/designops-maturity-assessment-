@@ -5,7 +5,7 @@ import { ResultPage } from './pages/ResultPage';
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/survey">
       <SurveyShell>
         <Routes>
           <Route path="/" element={<SurveyPage />} />
