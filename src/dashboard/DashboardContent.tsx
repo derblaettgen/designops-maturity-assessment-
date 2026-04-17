@@ -215,17 +215,16 @@ export function DashboardContent({
       <div className="dash-card dash-card--cta" data-pdf-block>
         <h3>🚀 Nächste Schritte</h3>
         <p>
-          Die vollständigen Studienergebnisse mit allen Branchen-Benchmarks
-          erscheinen im <strong>Q3 2026</strong> auf adesso.de. Nutzen Sie Ihre
-          individuelle Auswertung als Basis für Ihren DesignOps Business Case.
+          Die vollständigen Studienergebnisse inklusive aller Branchen-Benchmarks erscheinen im <strong>Q3 2026</strong> auf adesso.de. Nutzen Sie Ihre
+          individuelle Auswertung als als fundierte Basis für Ihren DesignOps Business Case – und lassen Sie uns gemeinsam die nächsten Schritte ableiten.
         </p>
         <a
-          href="https://www.adesso.de"
+          href="mailto:andreas.joerder@adesso.de?subject=Interesse an Beratungsgespräch zum DesignOps Maturity Assessment&body=Hallo%20adesso%20Team,%0D%0A%0D%0Aich%20habe%20mein%20DesignOps%20Maturity%20Ergebnis%20erhalten%20und%20möchte%20gerne%20ein%20Beratungsgespräch%20vereinbaren,%20um%20die%20Ergebnisse%20zu%20besprechen%20und%20nächste%20Schritte%20abzuleiten.%0D%0A%0D%0AMein%20aktueller%20Reifegrad:%20${formatScore(overallScore)}%0D%0AMein%20Hauptinteresse:%0D%0A- %20Ergebnisse%20besprechen,%0D%0A- %20Maßnahmenplan%20ableiten,%0D%0A- %20Best-Practices%20und%20Ressourcen,%0D%0A- %20Individuelle Beratung,%0D%0A- %20Sonstiges:%20[bitte hier ergänzen]%0D%0A%0D%0AIch freue mich auf Ihre Rückmeldung und die Möglichkeit, gemeinsam die nächsten Schritte zu planen.%0D%0A%0D%0AMit freundlichen Grüßen,%0D%0A[Ihr Name]"
           target="_blank"
           rel="noreferrer"
           className="btn btn-primary"
         >
-          Mehr erfahren auf adesso.de →
+          Jetzt Beratungsgespräch vereinbaren 📧
         </a>
       </div>
     </div>
