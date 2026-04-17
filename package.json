@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.4.1",
     "chart.js": "^4.4.0",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.14.1",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

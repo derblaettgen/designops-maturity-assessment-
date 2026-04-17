@@ -1,32 +1,34 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { getAllDimensionScores, getOverallScore } from '../lib/scoring';
+import type { DimensionWithScore } from '../lib/scoring';
 import { extractCosts, calculateWaste } from '../lib/waste';
-import { maturityLabel, maturityLevelKey } from '../lib/maturity';
-import { formatCompact, formatScore, formatSignedDelta } from '../lib/format';
-import { KpiCard, type KpiLevel } from './KpiCard';
-import { DashCard } from './DashCard';
-import { DimensionBars } from './DimensionBars';
-import { RankingTable } from './RankingTable';
-import { GapAnalysisTable } from './GapAnalysisTable';
-import { RoiHighlight } from './RoiHighlight';
-import { RadarChart } from './charts/RadarChart';
-import { WasteLevelsChart } from './charts/WasteLevelsChart';
-import { RoiChart } from './charts/RoiChart';
-import './DashboardView.css';
+import type { Costs } from '../lib/waste';
+import { exportElementAsPdf } from '../lib/pdfExport';
+import { DashboardContent } from './DashboardContent';
 
-interface KpiCardData {
-  level: KpiLevel;
-  value: string;
-  label: string;
-  badge?: string;
+const EXPORT_WIDTH_PX = 1440;
+
+interface DashboardViewProps {
+  precomputed?: {
+    dimensionScores: DimensionWithScore[];
+    overallScore: number;
+    costs: Costs;
+    currentWaste: number;
+    annualSaving: number;
+  };
+  shareUrl?: string;
 }
 
-export function DashboardView() {
+export function DashboardView({ precomputed, shareUrl }: DashboardViewProps = {}) {
   const config = useSurveyStore(state => state.config);
   const answers = useSurveyStore(state => state.answers);
+  const exportStageRef = useRef<HTMLDivElement>(null);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isExportMounted, setIsExportMounted] = useState(false);
 
-  const { dimensionScores, overallScore, costs, currentWaste, annualSaving } = useMemo(() => {
+  const computed = useMemo(() => {
+    if (precomputed) return precomputed;
     const computedDimensionScores = getAllDimensionScores(config, answers);
     const computedOverallScore = getOverallScore(computedDimensionScores);
     const computedCosts = extractCosts(config.costDefaults, answers);
@@ -38,105 +40,63 @@ export function DashboardView() {
       currentWaste: wasteResult.currentWaste,
       annualSaving: wasteResult.annualSaving,
     };
-  }, [config, answers]);
+  }, [config, answers, precomputed]);
 
-  const overall = config.benchmarks.overall;
-  const marketDelta = overallScore - overall.marketAvg;
-  const isAboveAverage = marketDelta >= 0;
+  const handlePdfClick = async () => {
+    setIsPdfLoading(true);
+    setIsExportMounted(true);
 
-  const kpiCards: KpiCardData[] = [
-    {
-      level: maturityLevelKey(overallScore),
-      value: formatScore(overallScore),
-      label: 'Ihr Gesamt-Reifegrad',
-      badge: maturityLabel(overallScore),
-    },
-    {
-      level: 'market',
-      value: formatScore(overall.marketAvg),
-      label: 'Marktdurchschnitt DACH',
-      badge: maturityLabel(overall.marketAvg),
-    },
-    {
-      level: 'top',
-      value: formatScore(overall.topPerformer),
-      label: 'Top-Performer',
-      badge: maturityLabel(overall.topPerformer),
-    },
-    {
-      level: isAboveAverage ? 'positive' : 'negative',
-      value: formatSignedDelta(marketDelta),
-      label: 'vs. Markt',
-      badge: isAboveAverage ? 'Überdurchschnittlich' : 'Unter Durchschnitt',
-    },
-    {
-      level: 'waste',
-      value: formatCompact(currentWaste),
-      label: 'Verschwendung / Jahr (aktuell)',
-    },
-    {
-      level: 'saving',
-      value: formatCompact(annualSaving),
-      label: 'Einsparpotenzial / Jahr',
-      badge: 'bei Reifegrad 4.0',
-    },
-  ];
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+      const exportEl = exportStageRef.current;
+      if (!exportEl) throw new Error('Export-Stage nicht gefunden.');
+
+      const filename = `DesignOps-Report-${
+        new Date().toISOString().split('T')[0]
+      }.pdf`;
+
+      await exportElementAsPdf(exportEl, filename);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unbekannter Fehler';
+      alert(`PDF-Export fehlgeschlagen:\n\n${message}`);
+    } finally {
+      setIsExportMounted(false);
+      setIsPdfLoading(false);
+    }
+  };
 
   return (
-    <div className="dashboard active">
-      <div className="dash-hero">
-        <h2>📊 Ihr DesignOps-Ergebnis</h2>
-        <p>
-          Individuelle Auswertung mit Benchmark-Vergleich gegen Marktdurchschnitt und
-          Top-Performer (DACH 2026)
-        </p>
-      </div>
+    <>
+      <DashboardContent
+        {...computed}
+        isExportVersion={false}
+        onPdfClick={handlePdfClick}
+        isPdfLoading={isPdfLoading}
+        shareUrl={shareUrl}
+      />
 
-      <div className="dash-kpis">
-        {kpiCards.map(card => (
-          <KpiCard key={card.label} {...card} />
-        ))}
-      </div>
-
-      <div className="dash-grid">
-        <DashCard title="🕸️ Radar: Sie vs. Markt vs. Top-Performer">
-          <RadarChart dimensionScores={dimensionScores} />
-        </DashCard>
-        <DashCard title="📊 Dimensionen im Detail">
-          <DimensionBars dimensionScores={dimensionScores} />
-          <div className="dimension-legend">
-            <span><span className="dimension-legend__dot dimension-legend__dot--user" /> Ihr Wert</span>
-            <span><span className="dimension-legend__dot dimension-legend__dot--market" /> Marktdurchschnitt</span>
-            <span><span className="dimension-legend__line" /> Top-Performer</span>
-          </div>
-        </DashCard>
-      </div>
-
-      <RankingTable />
-      <GapAnalysisTable dimensionScores={dimensionScores} />
-
-      <RoiHighlight annualSaving={annualSaving} costs={costs} />
-
-      <div className="dash-grid">
-        <DashCard title="💰 Einsparung pro Reifegrad-Stufe">
-          <WasteLevelsChart costs={costs} />
-        </DashCard>
-        <DashCard title="📈 ROI über 3 Jahre (realistisches Szenario)">
-          <RoiChart annualSaving={annualSaving} />
-        </DashCard>
-      </div>
-
-      <div className="dash-card dash-card--cta">
-        <h3>🚀 Nächste Schritte</h3>
-        <p>
-          Die vollständigen Studienergebnisse mit allen Branchen-Benchmarks erscheinen im{' '}
-          <strong>Q3 2026</strong> auf adesso.de. Nutzen Sie Ihre individuelle Auswertung als
-          Basis für Ihren DesignOps Business Case.
-        </p>
-        <a href="https://www.adesso.de" target="_blank" rel="noreferrer" className="btn btn-primary">
-          Mehr erfahren auf adesso.de →
-        </a>
-      </div>
-    </div>
+      {isExportMounted && (
+        <div
+          ref={exportStageRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: `-${EXPORT_WIDTH_PX + 100}px`,
+            width: `${EXPORT_WIDTH_PX}px`,
+            background: '#ffffff',
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <DashboardContent
+            {...computed}
+            isExportVersion={true}
+          />
+        </div>
+      )}
+    </>
   );
 }

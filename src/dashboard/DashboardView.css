@@ -18,7 +18,7 @@
   color: white;
   margin-bottom: 28px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 
   &::after {
     content: '';
@@ -47,6 +47,60 @@
   @media (max-width: 700px) { padding: 24px 20px; }
 }
 
+<<<<<<< Updated upstream
+=======
+.dash-hero__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.dash-hero__actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.share-dropdown {
+  position: relative;
+}
+
+.share-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .15);
+  min-width: 180px;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.share-dropdown__item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-brand, #004C93);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.share-dropdown__item:hover {
+  background: #f0f4f8;
+}
+
+.share-dropdown__item + .share-dropdown__item {
+  border-top: 1px solid #e8ecf0;
+}
+
+/* ===== GRID + CARDS ===== */
+>>>>>>> Stashed changes
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SurveyShell } from './components/SurveyShell';
-import { StepView } from './components/StepView';
-import { DashboardView } from './dashboard/DashboardView';
+import { SurveyPage } from './pages/SurveyPage';
+import { ResultPage } from './pages/ResultPage';
 
 export function App() {
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
   return (
-    <SurveyShell>
-      {isSubmitted ? <DashboardView /> : <StepView onSubmit={() => setIsSubmitted(true)} />}
-    </SurveyShell>
+    <BrowserRouter>
+      <SurveyShell>
+        <Routes>
+          <Route path="/" element={<SurveyPage />} />
+          <Route path="/result/:id" element={<ResultPage />} />
+        </Routes>
+      </SurveyShell>
+    </BrowserRouter>
   );
 }
