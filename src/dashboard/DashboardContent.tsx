@@ -225,7 +225,7 @@ export function DashboardContent({
         <h3>🚀 Nächste Schritte</h3>
         <p>
           Die vollständigen Studienergebnisse inklusive aller Branchen-Benchmarks erscheinen im <strong>Q3 2026</strong> auf adesso.de. Nutzen Sie Ihre
-          individuelle Auswertung als als fundierte Basis für Ihren DesignOps Business Case – und lassen Sie uns gemeinsam die nächsten Schritte ableiten.
+          individuelle Auswertung als fundierte Basis für Ihren DesignOps Business Case – und lassen Sie uns gemeinsam die nächsten Schritte ableiten.
         </p>
         <a
           href={mailtoLink}

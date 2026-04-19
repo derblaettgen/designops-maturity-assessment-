@@ -1,7 +1,7 @@
-/* buttons.css — shared button atoms (.btn, .btn-primary, .btn-ghost, .btn-cta) */
+/* buttons.css — shared button atoms, adesso style (sharp corners, bold blue) */
 
 .btn {
-  padding: 14px 28px;
+  padding: 13px 26px;
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: 700;
@@ -12,7 +12,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  letter-spacing: .1px;
+  letter-spacing: .2px;
 }
 .btn-primary {
   background: var(--color-brand);
@@ -27,20 +27,21 @@
 .btn-ghost {
   background: transparent;
   color: var(--color-gray-500);
-  border: 2px solid var(--color-gray-200);
+  border: 2px solid var(--color-gray-300);
 }
 .btn-ghost:hover {
   border-color: var(--color-brand);
   color: var(--color-brand);
 }
 .btn-cta {
-  background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
+  background: var(--color-accent);
   color: var(--color-white);
-  box-shadow: 0 4px 14px rgba(0,180,160,.2);
+  box-shadow: 0 4px 14px rgba(200, 182, 0, .2);
   padding: 16px 36px;
   font-size: 0.95rem;
 }
 .btn-cta:hover {
+  background: var(--color-accent-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0,180,160,.3);
+  box-shadow: 0 8px 28px rgba(200, 182, 0, .3);
 }

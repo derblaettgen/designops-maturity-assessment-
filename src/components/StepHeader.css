@@ -8,7 +8,7 @@
   h2 {
     font-size: var(--text-lg);
     font-weight: 800;
-    color: var(--color-dark-surface);
+    color: var(--color-brand);
     margin-bottom: 6px;
   }
 

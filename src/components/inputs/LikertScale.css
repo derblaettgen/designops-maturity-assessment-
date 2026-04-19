@@ -33,14 +33,14 @@
     align-items: center;
     justify-content: center;
     height: 40px;
-    border-radius: var(--radius-full);
-    border: 1.5px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-gray-300);
     cursor: pointer;
     transition: all .15s var(--ease-standard);
     font-size: var(--text-sm);
     font-weight: 700;
     color: var(--color-gray-500);
-    background: var(--color-white);
+    background: var(--color-gray-100);
     user-select: none;
 
     &:hover {
@@ -54,7 +54,7 @@
     border-color: var(--color-brand);
     background: var(--color-brand);
     color: var(--color-white);
-    box-shadow: 0 2px 8px rgba(0,76,147,.2);
+    box-shadow: 0 2px 8px rgba(0,110,199,.2);
   }
 }
 
@@ -66,6 +66,6 @@
   .likert__option label {
     height: 44px;
     font-size: var(--text-sm);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
   }
 }

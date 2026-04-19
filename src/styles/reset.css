@@ -8,7 +8,7 @@
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-gray-900);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;

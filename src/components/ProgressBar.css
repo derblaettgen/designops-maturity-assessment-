@@ -47,7 +47,7 @@
 .progress-bar__step {
   flex: 1;
   height: 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--color-gray-200);
   border: none;
   padding: 0;
@@ -59,7 +59,8 @@
   }
 
   &.progress-bar__step--active {
-    background: var(--color-accent);
+    background: var(--color-brand);
+    opacity: .5;
   }
 
   &.progress-bar__step--done {

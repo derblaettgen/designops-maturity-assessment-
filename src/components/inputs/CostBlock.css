@@ -5,7 +5,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   background: var(--color-success);
   color: white;
   font-size: var(--text-xs);
@@ -48,7 +48,7 @@
   &:focus {
     outline: none;
     border-color: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(0,76,147,.08);
+    box-shadow: 0 0 0 3px rgba(0,110,199,.08);
     background: var(--color-white);
   }
 }

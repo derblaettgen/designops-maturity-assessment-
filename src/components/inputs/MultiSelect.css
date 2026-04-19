@@ -17,8 +17,8 @@
     align-items: center;
     gap: 6px;
     padding: 9px 16px;
-    border-radius: var(--radius-full);
-    border: 2px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-gray-300);
     cursor: pointer;
     font-size: 0.82rem;
     font-weight: 500;

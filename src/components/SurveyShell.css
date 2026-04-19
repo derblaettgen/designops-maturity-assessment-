@@ -1,9 +1,9 @@
-/* SurveyShell.css — footer only (hero moved to WelcomeScreen) */
+/* SurveyShell.css — footer, adesso style (deep blue) */
 
 /* ===== FOOTER ===== */
 .footer {
-  background: var(--color-dark-surface);
-  color: var(--color-gray-400);
+  background: var(--color-brand-deepest);
+  color: rgba(255, 255, 255, .6);
   padding: 32px 24px;
   text-align: center;
   font-size: var(--text-xs);

@@ -1,56 +1,59 @@
-/* tokens.css — design tokens (CSS custom properties) */
+/* tokens.css — design tokens (CSS custom properties), aligned to adesso.de design language */
 
 :root {
-  /* Brand */
-  --color-brand:          #004C93;
-  --color-brand-dark:     #00336A;
-  --color-brand-deeper:   #001A3D;
-  --color-brand-light:    #E6EFF8;
-  --color-brand-lightest: #F2F7FC;
+  /* Brand — adesso corporate blue palette */
+  --color-brand:          #006EC7;
+  --color-brand-dark:     #005C9E;
+  --color-brand-deeper:   #003D69;
+  --color-brand-deepest:  #062D47;
+  --color-brand-light:    #E0EEF9;
+  --color-brand-lightest: #F0F6FB;
 
   /* Interactive */
-  --color-accent:       #009FE3;
-  --color-success:      #00B4A0;
-  --color-success-dark: #009688;
+  --color-accent:       #C8B600; /* adesso mustard/gold for CTAs */
+  --color-accent-hover: #B5A500;
+  --color-success:      #52AF00;
+  --color-success-dark: #469600;
   --color-warning:      #ED6B22;
-  --color-danger:       #E53E3E;
+  --color-danger:       #B20000;
 
-  /* Surfaces */
+  /* Surfaces — adesso uses clean white + warm light grey */
   --color-surface:      #FFFFFF;
-  --color-bg:           #F7FAFC;
-  --color-dark-surface: #1A1D2B;
+  --color-bg:           #F3F2F1;
+  --color-bg-warm:      #E8E4E1;
+  --color-dark-surface: #062D47;
 
   /* Text */
-  --color-text-primary:   #212529;
-  --color-text-secondary: #4A5568;
-  --color-text-muted:     #718096;
+  --color-text-primary:   #1A1A1A;
+  --color-text-secondary: #4A4A4A;
+  --color-text-muted:     #887D75; /* adesso warm grey */
   --color-text-disabled:  #A0AEC0;
 
-  /* Grays */
-  --color-gray-900: #212529;
-  --color-gray-700: #4A5568;
-  --color-gray-500: #718096;
-  --color-gray-400: #A0AEC0;
-  --color-gray-300: #CBD5E0;
-  --color-gray-200: #E2E8F0;
-  --color-gray-100: #F7FAFC;
+  /* Grays — warm-tinted to match adesso */
+  --color-gray-900: #1A1A1A;
+  --color-gray-700: #4A4A4A;
+  --color-gray-500: #887D75;
+  --color-gray-400: #A09890;
+  --color-gray-300: #DCD9D7;
+  --color-gray-200: #E8E4E1;
+  --color-gray-100: #F3F2F1;
   --color-white:    #FFFFFF;
 
   /* Borders */
-  --color-border:        #E2E8F0;
-  --color-border-strong: #CBD5E0;
+  --color-border:        #DCD9D7;
+  --color-border-strong: #C8C3BF;
 
-  /* Shape */
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
+  /* Shape — adesso uses sharp to minimal radius */
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
   --radius-full: 9999px;
 
-  /* Shadows — blue-tinted */
-  --shadow-sm: 0 1px 4px rgba(0, 76, 147, 0.05);
-  --shadow-md: 0 2px 16px rgba(0, 76, 147, 0.07);
-  --shadow-lg: 0 8px 40px rgba(0, 76, 147, 0.10);
-  --shadow-xl: 0 12px 48px rgba(0, 76, 147, 0.14);
+  /* Shadows — subtle, corporate */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 6px 24px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.14);
 
   /* Motion */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
