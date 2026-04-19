@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { ProgressBar } from './ProgressBar';
 import './SurveyShell.css';
 
 interface SurveyShellProps {
@@ -9,47 +8,6 @@ interface SurveyShellProps {
 export function SurveyShell({ children }: SurveyShellProps) {
   return (
     <>
-      <div className="topbar">
-        <div className="topbar-logo">adesso</div>
-        <div>
-          <a href="https://www.adesso.de" target="_blank" rel="noreferrer">
-            adesso.de
-          </a>
-        </div>
-      </div>
-
-      <div className="hero">
-        <div className="hero-inner">
-          <div className="hero-badge">📊 Feldstudie 2026</div>
-          <h1>
-            DesignOps Reifegrad-Studie:
-            <br />
-            <span>Status quo in der DACH-Region</span>
-          </h1>
-          <p>
-            Wie professionell organisieren Unternehmen ihre Design-Teams? Diese
-            branchenübergreifende Studie erhebt den DesignOps-Reifegrad – inklusive
-            Benchmark-Vergleich und ROI-Analyse.
-          </p>
-          <div className="hero-stats">
-            <div className="hero-stat">
-              <div className="hero-stat__value">~12</div>
-              <div className="hero-stat__label">Minuten</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat__value">9</div>
-              <div className="hero-stat__label">Abschnitte</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat__value">100%</div>
-              <div className="hero-stat__label">Anonym</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ProgressBar />
-
       {children}
 
       <div className="footer">

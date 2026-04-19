@@ -1,0 +1,166 @@
+/* WelcomeScreen.css — full-page intro before the survey starts */
+
+.welcome {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--color-brand) 0%, var(--color-brand-dark) 55%, var(--color-brand-deeper) 100%);
+  color: var(--color-white);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,159,227,.1), transparent 70%);
+    top: -200px;
+    right: -150px;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,180,160,.08), transparent 70%);
+    bottom: -100px;
+    left: -100px;
+    pointer-events: none;
+  }
+}
+
+.welcome__inner {
+  max-width: 620px;
+  padding: 48px 32px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  animation: welcomeFadeIn .6s var(--ease-enter) both;
+}
+
+.welcome__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.14);
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 24px;
+}
+
+.welcome__title {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.welcome__title-accent {
+  color: var(--color-accent);
+}
+
+.welcome__description {
+  font-size: var(--text-base);
+  opacity: .8;
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto 36px;
+}
+
+.welcome__features {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.welcome__feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.welcome__feature-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.welcome__feature-value {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.welcome__feature-label {
+  font-size: var(--text-xs);
+  opacity: .6;
+  margin-top: 1px;
+}
+
+.welcome__start {
+  padding: 16px 48px;
+  font-size: 1rem;
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-brand);
+  font-weight: 800;
+  box-shadow: 0 4px 24px rgba(0,0,0,.15);
+  transition: all .2s var(--ease-standard);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    background: var(--color-white);
+  }
+}
+
+.welcome__privacy {
+  margin-top: 20px;
+  font-size: var(--text-xs);
+  opacity: .5;
+
+  a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+@keyframes welcomeFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .welcome__inner {
+    padding: 32px 20px;
+  }
+
+  .welcome__features {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .welcome__start {
+    width: 100%;
+    justify-content: center;
+  }
+}

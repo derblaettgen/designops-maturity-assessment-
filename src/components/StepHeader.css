@@ -1,24 +1,15 @@
-/* StepHeader.css — section header (number, icon + title, description, optional study note) */
+/* StepHeader.css — section header (icon + title, description, optional study note) */
 
 .step-header {
-  margin-bottom: 36px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid var(--color-gray-200);
-
-  .step-header__number {
-    font-size: var(--text-xs);
-    font-weight: 700;
-    color: var(--color-accent);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 10px;
-  }
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-gray-200);
 
   h2 {
     font-size: var(--text-lg);
     font-weight: 800;
     color: var(--color-dark-surface);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   p {

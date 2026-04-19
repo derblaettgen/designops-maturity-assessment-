@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
+import { ProgressBar } from './ProgressBar';
 import { QuestionCard } from './QuestionCard';
 import { StepHeader } from './StepHeader';
-import { SectionProgressBar } from './SectionProgressBar';
 import { NavigationButtons } from './NavigationButtons';
 import './StepView.css';
 
@@ -23,15 +23,17 @@ export function StepView({ onSubmit }: StepViewProps) {
   if (!section) return null;
 
   return (
-    <div className="step-view" ref={containerRef}>
-      <div className="step active" key={section.id}>
-        <StepHeader section={section} />
-        {section.questions.map(question => (
-          <QuestionCard key={question.id} question={question} />
-        ))}
-        <SectionProgressBar section={section} />
-        <NavigationButtons onSubmit={onSubmit} />
+    <>
+      <ProgressBar />
+      <div className="step-view" ref={containerRef}>
+        <div className="step active" key={section.id}>
+          <StepHeader section={section} />
+          {section.questions.map(question => (
+            <QuestionCard key={question.id} question={question} />
+          ))}
+          <NavigationButtons onSubmit={onSubmit} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

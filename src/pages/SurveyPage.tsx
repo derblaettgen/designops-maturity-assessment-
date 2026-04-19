@@ -3,11 +3,13 @@ import { useSurveyStore } from '../store/useSurveyStore';
 import { getAllDimensionScores, getOverallScore } from '../lib/scoring';
 import { extractCosts, calculateWaste } from '../lib/waste';
 import { maturityLabel } from '../lib/maturity';
-import { submitToMongoDB, clear } from '../lib/storage';
+import { submitToMongoDB, clear, load } from '../lib/storage';
+import { WelcomeScreen } from '../components/WelcomeScreen';
 import { StepView } from '../components/StepView';
 import { DashboardView } from '../dashboard/DashboardView';
 
 export function SurveyPage() {
+  const [isStarted, setIsStarted] = useState(() => load() !== null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -40,6 +42,10 @@ export function SurveyPage() {
 
   if (isSubmitted) {
     return <DashboardView shareUrl={shareUrl} />;
+  }
+
+  if (!isStarted) {
+    return <WelcomeScreen onStart={() => setIsStarted(true)} />;
   }
 
   return <StepView onSubmit={handleSubmit} />;
