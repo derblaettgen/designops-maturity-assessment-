@@ -69,7 +69,7 @@ export async function submitToMongoDB(
 
   if (import.meta.env.DEV) {
     const documentId = crypto.randomUUID();
-    sessionStorage.setItem(
+    localStorage.setItem(
       `${DEV_SUBMISSIONS_PREFIX}${documentId}`,
       JSON.stringify(document),
     );
@@ -98,10 +98,11 @@ export async function submitToMongoDB(
 
 export async function fetchSubmissionById(id: string): Promise<SurveySubmission> {
   if (import.meta.env.DEV) {
-    const stored = sessionStorage.getItem(`${DEV_SUBMISSIONS_PREFIX}${id}`);
+    const stored = localStorage.getItem(`${DEV_SUBMISSIONS_PREFIX}${id}`);
     if (stored) {
       return { _id: id, answers: JSON.parse(stored) as SurveySubmission['answers'] };
     }
+    throw new Error('Dev submission not found — submit the survey first');
   }
 
   const response = await fetch(`${API_BASE}/survey/${id}`, {
