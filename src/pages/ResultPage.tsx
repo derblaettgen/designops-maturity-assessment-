@@ -14,6 +14,10 @@ export function ResultPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
 
     setIsLoading(true);

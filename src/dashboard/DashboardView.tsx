@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { getAllDimensionScores, getOverallScore } from '../lib/scoring';
 import type { DimensionWithScore } from '../lib/scoring';
@@ -26,6 +26,17 @@ export function DashboardView({ precomputed, shareUrl }: DashboardViewProps = {}
   const exportStageRef = useRef<HTMLDivElement>(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [isExportMounted, setIsExportMounted] = useState(false);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    // Chart.js renders canvases asynchronously after mount, which can shift
+    // layout. Re-scroll after the browser has had time to paint them.
+    const timerId = setTimeout(() => window.scrollTo(0, 0), 100);
+    return () => clearTimeout(timerId);
+  }, []);
 
   const computed = useMemo(() => {
     if (precomputed) return precomputed;

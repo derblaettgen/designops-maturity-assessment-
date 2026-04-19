@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useSurveyStore } from '../store/useSurveyStore';
 import { ProgressBar } from './ProgressBar';
 import { QuestionCard } from './QuestionCard';
@@ -13,11 +13,9 @@ interface StepViewProps {
 export function StepView({ onSubmit }: StepViewProps) {
   const currentStep = useSurveyStore(state => state.currentStep);
   const section = useSurveyStore(state => state.config.sections[state.currentStep]);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const top = containerRef.current?.offsetTop ?? 0;
-    window.scrollTo({ top, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
   if (!section) return null;
@@ -25,7 +23,7 @@ export function StepView({ onSubmit }: StepViewProps) {
   return (
     <>
       <ProgressBar />
-      <div className="step-view" ref={containerRef}>
+      <div className="step-view">
         <div className="step active" key={section.id}>
           <StepHeader section={section} />
           {section.questions.map(question => (
