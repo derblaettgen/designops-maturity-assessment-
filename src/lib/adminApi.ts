@@ -74,11 +74,7 @@ export async function fetchAdminStats(): Promise<AdminStats> {
     };
   }
 
-  const response = await fetch(`${API_BASE}/survey/stats`, {
-    headers: {
-      'X-API-Key': import.meta.env.VITE_API_KEY,
-    },
-  });
+  const response = await fetch(`${API_BASE}/survey/stats`);
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
@@ -189,11 +185,7 @@ export async function fetchAdminSubmissions(
   const queryString = searchParams.toString();
   const url = `${API_BASE}/survey${queryString ? `?${queryString}` : ''}`;
 
-  const response = await fetch(url, {
-    headers: {
-      'X-API-Key': import.meta.env.VITE_API_KEY,
-    },
-  });
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);

@@ -12,7 +12,6 @@ describe('fetchAdminStats', () => {
     vi.resetAllMocks();
     globalThis.fetch = vi.fn();
     localStorage.clear();
-    vi.stubEnv('VITE_API_KEY', 'test-api-key');
   });
 
   afterEach(() => {
@@ -43,8 +42,7 @@ describe('fetchAdminStats', () => {
       const stats = await fetchAdminStats();
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        'https://designops-maturity.de/api/v1/survey/stats',
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        'https://designops-maturity.de/api/v1/survey/stats'
       );
       expect(stats).toEqual(mockResponse);
     });
@@ -58,7 +56,7 @@ describe('fetchAdminStats', () => {
       await expect(fetchAdminStats()).rejects.toThrow('API error: 500');
     });
 
-    it('throws on 401 response (missing API key)', async () => {
+    it('throws on an unauthorized response', async () => {
       (globalThis.fetch as any).mockResolvedValue({
         ok: false,
         status: 401
@@ -133,7 +131,6 @@ describe('fetchAdminSubmissions', () => {
     vi.resetAllMocks();
     globalThis.fetch = vi.fn();
     localStorage.clear();
-    vi.stubEnv('VITE_API_KEY', 'test-api-key');
   });
 
   afterEach(() => {
@@ -162,8 +159,7 @@ describe('fetchAdminSubmissions', () => {
       const response = await fetchAdminSubmissions({ page: '1', limit: '20' });
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        'https://designops-maturity.de/api/v1/survey?page=1&limit=20',
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        'https://designops-maturity.de/api/v1/survey?page=1&limit=20'
       );
       expect(response).toEqual(mockResponse);
       expect(response.data.length).toBe(20);
@@ -187,8 +183,7 @@ describe('fetchAdminSubmissions', () => {
       await fetchAdminSubmissions({ page: '1', dateFrom: '', branch: '' });
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        'https://designops-maturity.de/api/v1/survey?page=1',
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        'https://designops-maturity.de/api/v1/survey?page=1'
       );
     });
   });
