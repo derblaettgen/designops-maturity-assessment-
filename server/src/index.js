@@ -2,10 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connect = require('./db');
+const { getListenConfig } = require('./config');
 const surveyRoutes = require('./survey.routes');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const { host: HOST, port: PORT } = getListenConfig();
 
 const allowedOrigins = [
   'https://designops-maturity.de',
@@ -30,7 +31,7 @@ app.get('/api/v1/health', (req, res) => {
 app.use('/api/v1/survey', surveyRoutes);
 
 connect().then(() => {
-  app.listen(PORT, () => {
-    console.log(`API running on port ${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`API running on ${HOST}:${PORT}`);
   });
 });
