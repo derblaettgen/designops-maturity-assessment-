@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Deploy backend, then frontend
+      - name: Deploy versioned systemd release
         uses: appleboy/ssh-action@v1
         env:
           DEPLOY_SHA: ${{ github.sha }}
@@ -26,88 +26,22 @@ jobs:
           script: |
             set -eu
 
-            APP_DIR=/var/www/designops-maturity-assessment
-            API_DIR=/var/www/survey-api
-            API_BACKUP_DIR=/var/backups/survey-api/$DEPLOY_SHA
-            FRONTEND_BUILD_DIR=/tmp/designops-maturity-$DEPLOY_SHA
+            SOURCE_DIR=/srv/apps/designops/source
 
             case "$DEPLOY_SHA" in
               ''|*[!0-9a-f]*) echo "Invalid deployment SHA"; exit 1 ;;
             esac
-
-            cd "$APP_DIR"
-            git pull --ff-only origin main
-
-            # Build and test the frontend without publishing it yet. The live
-            # frontend remains untouched if this preflight fails.
-            npm ci
-            npm test -- --run
-            npm run build -- --outDir "$FRONTEND_BUILD_DIR"
-            test -f "$FRONTEND_BUILD_DIR/index.html"
-
-            # Keep a source-only rollback copy. The live .env (including the
-            # server-only maintenance key) and node_modules are never copied.
-            if [ ! -d "$API_BACKUP_DIR" ]; then
-              mkdir -p "$API_BACKUP_DIR"
-              rsync -a --delete \
-                --exclude='.env' \
-                --exclude='node_modules' \
-                "$API_DIR/" "$API_BACKUP_DIR/"
+            if [ "${#DEPLOY_SHA}" -ne 40 ]; then
+              echo "Deployment SHA must contain 40 hexadecimal characters"
+              exit 1
             fi
-
-            rollback_backend() {
-              set +e
-              echo "Backend verification failed; restoring the previous release."
-              rsync -a --delete \
-                --exclude='.env' \
-                --exclude='node_modules' \
-                "$API_BACKUP_DIR/" "$API_DIR/"
-              cd "$API_DIR"
-              npm ci --omit=dev
-              pm2 reload survey-api --update-env
-              set -e
-            }
-
-            # Deploy and validate the API before publishing the keyless
-            # frontend. Exclusions preserve deployment-only files.
-            rsync -a --delete \
-              --exclude='.env' \
-              --exclude='node_modules' \
-              "$APP_DIR/server/" "$API_DIR/"
-
-            if ! (cd "$API_DIR" && npm ci --omit=dev && npm test); then
-              rollback_backend
+            if [ ! -d "$SOURCE_DIR/.git" ]; then
+              echo "Missing bootstrapped deployment checkout: $SOURCE_DIR"
               exit 1
             fi
 
-            if ! pm2 reload survey-api --update-env; then
-              rollback_backend
-              exit 1
-            fi
+            git -C "$SOURCE_DIR" fetch --prune origin main
+            git -C "$SOURCE_DIR" checkout --detach "$DEPLOY_SHA"
+            test "$(git -C "$SOURCE_DIR" rev-parse HEAD)" = "$DEPLOY_SHA"
 
-            API_READY=0
-            for attempt in 1 2 3 4 5 6 7 8 9 10; do
-              if curl --fail --silent --show-error \
-                http://127.0.0.1:3001/api/v1/health > /dev/null; then
-                API_READY=1
-                break
-              fi
-              sleep 2
-            done
-
-            if [ "$API_READY" -ne 1 ] || ! curl --fail --silent --show-error \
-              http://127.0.0.1:3001/api/v1/survey/stats > /dev/null; then
-              rollback_backend
-              exit 1
-            fi
-
-            # The compatible backend is live; now publish the already-tested
-            # frontend bundle and verify it through nginx.
-            mkdir -p "$APP_DIR/dist"
-            rsync -a --delete "$FRONTEND_BUILD_DIR/" "$APP_DIR/dist/"
-            curl --fail --silent --show-error \
-              --resolve designops-maturity.de:443:127.0.0.1 \
-              https://designops-maturity.de/survey/ > /dev/null
-            rm -rf "$FRONTEND_BUILD_DIR"
-
-            echo "Backend and frontend deployment completed successfully."
+            exec bash "$SOURCE_DIR/ops/deploy-vps.sh" "$DEPLOY_SHA"
