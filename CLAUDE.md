@@ -94,8 +94,12 @@ After a successful submit, a share URL is generated in the format `${origin}/sur
 
 ## Backend / Persistence
 
-**API Base:** `https://designops-maturity.de/api/v1`  
-**Auth:** `X-API-Key` header, value from `VITE_API_KEY` env variable  
+**API Base:** `https://designops-maturity.de/api/v1`
+
+**Access:** Survey creation and read endpoints are public. Destructive maintenance
+requests require a server-only `API_KEY` sent in the `X-API-Key` header. Never put
+this key in a `VITE_*` variable because Vite exposes those values to browsers.
+
 **Database:** MongoDB (not Postgres)
 
 Relevant functions in `src/lib/storage.ts`:

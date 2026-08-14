@@ -12,6 +12,8 @@ vite.config.js
 .idea
 
 .env
+.env.*
+!.env.example
 .claude/
 issues/
 CLAUDE.local.md

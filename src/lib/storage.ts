@@ -3,7 +3,6 @@ import type { DimensionWithScore } from './scoring';
 
 const STORAGE_KEY = 'designops-survey-v1';
 const API_BASE = 'https://designops-maturity.de/api/v1';
-const API_KEY = import.meta.env.VITE_API_KEY;
 const DEV_SUBMISSIONS_PREFIX = 'designops-dev-submission-';
 
 export function save(data: SavedState): void {
@@ -78,7 +77,7 @@ export async function submitToMongoDB(
 
   const response = await fetch(`${API_BASE}/survey`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(document),
   });
 
@@ -105,9 +104,7 @@ export async function fetchSubmissionById(id: string): Promise<SurveySubmission>
     throw new Error('Dev submission not found — submit the survey first');
   }
 
-  const response = await fetch(`${API_BASE}/survey/${id}`, {
-    headers: { 'X-API-Key': API_KEY },
-  });
+  const response = await fetch(`${API_BASE}/survey/${id}`);
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
